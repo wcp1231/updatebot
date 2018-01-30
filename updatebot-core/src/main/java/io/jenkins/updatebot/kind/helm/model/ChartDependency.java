@@ -27,6 +27,8 @@ public class ChartDependency {
     private String repository;
     private String version;
     private String condition;
+    private String alias;
+
     private List<String> tags;
 
     public String getName() {
@@ -67,5 +69,13 @@ public class ChartDependency {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 }
