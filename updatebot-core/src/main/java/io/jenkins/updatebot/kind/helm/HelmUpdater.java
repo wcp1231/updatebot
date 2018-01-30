@@ -15,6 +15,8 @@
  */
 package io.jenkins.updatebot.kind.helm;
 
+import io.fabric8.utils.Files;
+import io.fabric8.utils.IOHelpers;
 import io.jenkins.updatebot.commands.CommandContext;
 import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.kind.UpdaterSupport;
@@ -24,14 +26,15 @@ import io.jenkins.updatebot.model.Dependencies;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.jenkins.updatebot.support.MarkupHelper;
 import io.jenkins.updatebot.support.Strings;
-import io.fabric8.utils.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.jenkins.updatebot.kind.helm.HelmFiles.CHART_YAML;
 import static io.jenkins.updatebot.kind.helm.HelmFiles.REQUIREMENTS_YAML;
+import static io.jenkins.updatebot.kind.helm.HelmFiles.VALUES_YAML;
 import static io.jenkins.updatebot.support.FileHelper.isFile;
 
 /**
@@ -55,7 +58,10 @@ public class HelmUpdater extends UpdaterSupport {
     public boolean isApplicable(CommandContext context) {
         boolean answer = isFile(context.file(CHART_YAML));
         if (!answer) {
-            return fileExistsInDir(context.getDir(), CHART_YAML);
+            answer = fileExistsInDir(context.getDir(), CHART_YAML);
+            if (!answer) {
+                return isFile(context.file(VALUES_YAML));
+            }
         }
         return answer;
     }
@@ -118,6 +124,12 @@ public class HelmUpdater extends UpdaterSupport {
         File chartsFile = new File(dir, CHART_YAML);
         boolean answer = false;
         if (isFile(chartsFile)) {
+            File valuesFile = new File(dir, VALUES_YAML);
+            if (isFile(valuesFile)) {
+                if (updateValuesFile(context, changes, valuesFile)) {
+                    answer = true;
+                }
+            }
             File requirementsFile = new File(dir, REQUIREMENTS_YAML);
             if (isFile(requirementsFile)) {
                 Requirements requirements;
@@ -143,6 +155,35 @@ public class HelmUpdater extends UpdaterSupport {
                     }
                 }
             }
+        }
+        return answer;
+    }
+
+    private boolean updateValuesFile(CommandContext context, List<DependencyVersionChange> changes, File file) throws IOException {
+        List<String> lines = IOHelpers.readLines(file);
+        boolean answer = false;
+        for (DependencyVersionChange change : changes) {
+            String linePrefix = "Image: " + change.getDependency() + ": ";
+            String value = change.getVersion();
+
+            for (int i = 0, size = lines.size(); i < size; i++) {
+                String line = lines.get(i);
+                if (line.trim().startsWith(linePrefix)) {
+                    String remaining = line.substring(linePrefix.length());
+                    if (!remaining.trim().equals(value)) {
+                        answer = true;
+                        String whitespace = "";
+                        int idx = line.indexOf(linePrefix);
+                        if (idx > 0) {
+                            whitespace = line.substring(0, idx);
+                        }
+                        lines.set(i, whitespace + linePrefix + value);
+                    }
+                }
+            }
+        }
+        if (answer) {
+            IOHelpers.writeLines(file, lines);
         }
         return answer;
     }
