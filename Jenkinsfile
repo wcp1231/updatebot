@@ -1,15 +1,31 @@
 pipeline {
+  environment {
+    GH_CREDS = credentials('jenkins-x-github')
+  }
   agent {
     label "jenkins-maven"
   }
   stages {
-    stage('Maven Release') {
+    stage('CI Build') {
+      when {
+        branch 'PR-*'
+      }
       steps {
-        mavenFlow {
-          cdOrganisation "jenkins-x"
-          useStaging false
-          useSonatype true
-          pauseOnFailure true
+        checkout scm
+        container('maven') {
+          sh "mvn clean install"
+        }
+      }
+    }
+
+    stage('Build and Push Release') {
+      when {
+        branch 'master'
+      }
+      steps {
+        checkout scm
+        container('maven') {
+          sh './jx/scripts/release.sh'
         }
       }
     }
