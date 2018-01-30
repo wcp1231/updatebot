@@ -13,35 +13,31 @@
  * implied.  See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package io.jenkins.updatebot.kind.brew;
+package io.jenkins.updatebot.kind.docker;
 
+import io.fabric8.utils.Files;
+import io.fabric8.utils.IOHelpers;
 import io.jenkins.updatebot.commands.CommandContext;
 import io.jenkins.updatebot.commands.PushVersionChangesContext;
 import io.jenkins.updatebot.kind.UpdaterSupport;
 import io.jenkins.updatebot.model.Dependencies;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.jenkins.updatebot.support.FileHelper;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  */
-public class BrewUpdater extends UpdaterSupport {
-    private static final transient Logger LOG = LoggerFactory.getLogger(BrewUpdater.class);
+public class DockerUpdater extends UpdaterSupport {
+    private static final transient Logger LOG = LoggerFactory.getLogger(DockerUpdater.class);
 
     @Override
     public boolean isApplicable(CommandContext context) {
-        return FileHelper.isDirectory(context.file("Formula"));
+        return FileHelper.isFile(context.file("Dockerfile"));
     }
 
     @Override
@@ -85,43 +81,44 @@ public class BrewUpdater extends UpdaterSupport {
 
     private boolean doPushVersionChange(PushVersionChangesContext context, String name, String value) throws IOException {
         boolean answer = false;
-        File dir = context.file("Formula");
-        File rb = new File(dir, name + ".rb");
-
-        if (Files.isFile(rb)) {
-            String text = IOHelpers.readFully(rb);
-            String updatedText = text.replaceAll("version\\s+\"([^\"]+)\"", "version \"" + value + "\"");
-            if (!Objects.equal(text, updatedText)) {
-                context.updatedVersion(name, name, value, null);
-                answer = true;
-            }
-            if (answer) {
-                Pattern re = Pattern.compile("\\s+url\\s+\"([^\"]+)\"");
-                String[] lines = text.split("\n");
-                boolean found = false;
-                for (String line : lines) {
-                    Matcher matcher = re.matcher(line);
-                    if (matcher.matches()) {
-                        found = true;
-                        String url = matcher.group(1);
-                        if (url != null) {
-                            url = url.replace("#{version}", value) + ".sha256";
-                            LOG.info("Loading the sha256 from " + url);
-                            try {
-                                String sha256 = IOHelpers.loadFully(new URL(url)).trim();
-                                // lets try replace the sha
-                                updatedText = updatedText.replaceAll("sha256\\s+\"([^\"]+)\"", "sha256 \"" + sha256 + "\"");
-                            } catch (IOException e) {
-                                LOG.warn("Failed to load the sha256 from URL " + url + ". " + e, e);
-                            }
+        File dir = context.getDir();
+        if (Files.isDirectory(dir)) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    String fileName = file.getName();
+                    if (Files.isFile(file) && fileName.equals("Dockerfile") || fileName.startsWith("Dockerfile.")) {
+                        if (updateDockerfile(context, file, name, value)) {
+                            answer = true;
                         }
                     }
                 }
-                if (!found) {
-                    LOG.warn("Could not find the url in the formula to update the sha256");
-                }
-                IOHelpers.writeFully(rb, updatedText);
             }
+        }
+        return answer;
+    }
+
+    private boolean updateDockerfile(PushVersionChangesContext context, File file, String name, String value) throws IOException {
+        String[] linePrefixes = {
+                "FROM " + name + ":",
+                "ENV " + name + " "
+        };
+        List<String> lines = IOHelpers.readLines(file);
+        boolean answer = false;
+        for (int i = 0, size = lines.size(); i < size; i++) {
+            String line = lines.get(i);
+            for (String linePrefix : linePrefixes) {
+                if (line.startsWith(linePrefix)) {
+                    String remaining = line.substring(linePrefix.length());
+                    if (!remaining.trim().equals(value)) {
+                        answer = true;
+                        lines.set(i, linePrefix + value);
+                    }
+                }
+            }
+        }
+        if (answer) {
+            IOHelpers.writeLines(file, lines);
         }
         return answer;
     }

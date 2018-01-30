@@ -16,6 +16,7 @@
 package io.jenkins.updatebot.kind;
 
 import io.jenkins.updatebot.kind.brew.BrewUpdater;
+import io.jenkins.updatebot.kind.docker.DockerUpdater;
 import io.jenkins.updatebot.kind.file.FileUpdater;
 import io.jenkins.updatebot.kind.helm.HelmUpdater;
 import io.jenkins.updatebot.kind.maven.MavenUpdater;
@@ -30,7 +31,8 @@ public enum Kind {
     MAVEN("maven", new MavenUpdater()),
     NPM("npm", new PackageJsonUpdater()),
     PLUGINS("plugins", new PluginsUpdater()),
-    BREW("brew", new BrewUpdater());
+    BREW("brew", new BrewUpdater()),
+    DOCKER("docker", new DockerUpdater());
 
     private String name;
     private Updater updater;
