@@ -99,16 +99,21 @@ public class DockerUpdater extends UpdaterSupport {
     }
 
     private boolean updateDockerfile(PushVersionChangesContext context, File file, String name, String value) throws IOException {
-        String linePrefix = "ENV " + name + " ";
+        String[] linePrefixes = {
+                "FROM " + name + ":",
+                "ENV " + name + " "
+        };
         List<String> lines = IOHelpers.readLines(file);
         boolean answer = false;
         for (int i = 0, size = lines.size(); i < size; i++) {
             String line = lines.get(i);
-            if (line.startsWith(linePrefix)) {
-                String remaining = line.substring(linePrefix.length());
-                if (!remaining.trim().equals(value)) {
-                    answer = true;
-                    lines.set(i, linePrefix + value);
+            for (String linePrefix : linePrefixes) {
+                if (line.startsWith(linePrefix)) {
+                    String remaining = line.substring(linePrefix.length());
+                    if (!remaining.trim().equals(value)) {
+                        answer = true;
+                        lines.set(i, linePrefix + value);
+                    }
                 }
             }
         }
