@@ -163,7 +163,7 @@ public class HelmUpdater extends UpdaterSupport {
         List<String> lines = IOHelpers.readLines(file);
         boolean answer = false;
         for (DependencyVersionChange change : changes) {
-            String linePrefix = "Image: " + change.getDependency() + ": ";
+            String linePrefix = "Image: " + change.getDependency() + ":";
             String value = change.getVersion();
 
             for (int i = 0, size = lines.size(); i < size; i++) {
