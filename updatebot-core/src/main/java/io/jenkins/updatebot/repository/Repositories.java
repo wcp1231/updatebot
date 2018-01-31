@@ -98,7 +98,14 @@ public class Repositories {
             if (organisations != null && !organisations.isEmpty()) {
                 GitHub github = configuration.getGithub();
                 for (GithubOrganisation organisation : organisations) {
-                    addGitHubRepositories(map, github, organisation, new File(gitHubDir, organisation.getName()));
+                    if (organisation != null) {
+                        String name = organisation.getName();
+                        if (name != null) {
+                            addGitHubRepositories(map, github, organisation, new File(gitHubDir, name));
+                        } else {
+                            LOG.warn("Organisation has no name! " + organisation);
+                        }
+                    }
                 }
             }
         }
