@@ -15,16 +15,22 @@
  */
 package io.jenkins.updatebot.git;
 
+import io.fabric8.utils.Files;
+import io.fabric8.utils.IOHelpers;
 import io.fabric8.utils.Strings;
+import io.jenkins.updatebot.support.UserPassword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  */
@@ -118,6 +124,45 @@ public class GitHelper {
         } catch (MalformedURLException e) {
             // ignore
             return cloneUrl;
+        }
+    }
+
+    public static void loadGitCredentials(Map<String,UserPassword> map, File file) {
+        if (Files.isFile(file)) {
+            List<String> lines;
+            try {
+                lines = IOHelpers.readLines(file);
+            } catch (IOException e) {
+                LOG.warn("Failed to load file " + file + " " + e, e);
+                return;
+            }
+
+            LOG.debug("Loading git credentials file " + file);
+            int count = 0;
+            for (String line : lines) {
+                line = line.trim();
+                if (line.length() > 0) {
+                    try {
+                        URL url = new URL(line);
+                        String host = url.getHost();
+                        String userInfo = url.getUserInfo();
+                        if (userInfo != null) {
+                            String[] values = userInfo.split(":", 2);
+                            if (values != null && values.length == 2) {
+                                String user = values[0];
+                                String password = values[1];
+                                if (Strings.notEmpty(user) && Strings.notEmpty(password)) {
+                                    map.put(host, new UserPassword(user, password));
+                                    count++;
+                                }
+                            }
+                        }
+                    } catch (MalformedURLException e) {
+                        // ignore
+                    }
+                }
+            }
+            LOG.info("Loaded " + count + " git credentials from " + file);
         }
     }
 }

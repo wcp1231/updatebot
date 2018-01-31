@@ -30,13 +30,16 @@ import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.Strings;
 import io.fabric8.utils.Files;
 import io.fabric8.utils.GitHelpers;
+import io.jenkins.updatebot.support.UserPassword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Push changes from local source code into downstream projects
@@ -113,6 +116,7 @@ public class PushSourceChanges extends ModifyFilesCommandSupport {
 
     @Override
     protected void validateConfiguration(Configuration configuration) throws IOException {
+        super.validateConfiguration(configuration);
         File dir = configuration.getSourceDir();
         if (this.cloneUrl == null) {
             if (dir != null) {

@@ -18,28 +18,38 @@ package io.jenkins.updatebot.commands;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import io.jenkins.updatebot.Configuration;
+import io.jenkins.updatebot.git.GitHelper;
 import io.jenkins.updatebot.github.Issues;
 import io.jenkins.updatebot.model.RepositoryConfig;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.repository.Repositories;
 import io.fabric8.utils.Strings;
+import io.jenkins.updatebot.support.UserPassword;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.jenkins.updatebot.github.PullRequests.COMMAND_COMMENT_INDENT;
 import static io.jenkins.updatebot.github.PullRequests.COMMAND_COMMENT_PREFIX;
 import static io.jenkins.updatebot.github.PullRequests.COMMAND_COMMENT_PREFIX_SEPARATOR;
 import static io.jenkins.updatebot.support.ReflectionHelper.findFieldsAnnotatedWith;
 import static io.jenkins.updatebot.support.ReflectionHelper.getFieldValue;
+import static io.jenkins.updatebot.support.Strings.*;
 
 /**
  */
 public abstract class CommandSupport {
+    private static final transient Logger LOG = LoggerFactory.getLogger(PushSourceChanges.class);
+
     private List<LocalRepository> localRepositories;
     private RepositoryConfig repositoryConfig;
 
@@ -117,6 +127,33 @@ public abstract class CommandSupport {
     }
 
     protected void validateConfiguration(Configuration configuration) throws IOException {
+        if (empty(configuration.getGithubUsername()) || empty(configuration.getGithubPassword())) {
+            discoverGitCredentials(configuration);
+        }
+    }
+
+    protected void discoverGitCredentials(Configuration configuration) {
+        Map<String,UserPassword> credentials = new HashMap<>();
+        String home = System.getProperty("user.home", ".");
+        File gitCredentials = new File(home, ".git-credentials");
+        GitHelper.loadGitCredentials(credentials, gitCredentials);
+        if (credentials.isEmpty()) {
+            String configHome = System.getenv("XDG_CONFIG_HOME");
+            if (io.jenkins.updatebot.support.Strings.notEmpty(configHome)) {
+                GitHelper.loadGitCredentials(credentials, new File(configHome, "git/credentials"));
+                if (credentials.isEmpty()) {
+                    GitHelper.loadGitCredentials(credentials, new File(home, ".config/git/credentials"));
+                }
+            }
+        }
+        if (io.jenkins.updatebot.support.Strings.empty(configuration.getGithubUsername()) && io.jenkins.updatebot.support.Strings.empty(configuration.getGithubPassword())) {
+            UserPassword userPassword = credentials.get("github.com");
+            if (userPassword != null) {
+                configuration.info(LOG, "Loaded from git credentials");
+                configuration.setGithubUsername(userPassword.getUser());
+                configuration.setGithubPassword(userPassword.getPassword());
+            }
+        }
     }
 
     protected CommandContext createCommandContext(LocalRepository repository, Configuration configuration) {
