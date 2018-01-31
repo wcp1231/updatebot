@@ -18,3 +18,4 @@ mvn -V -B -e -U install org.sonatype.plugins:nexus-staging-maven-plugin:1.6.7:de
 jx step nexus release
 jx step tag --version ${VERSION}
 
+updatebot push-version --kind docker UPDATEBOT_VERSION ${VERSION}

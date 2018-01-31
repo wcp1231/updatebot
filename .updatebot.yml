@@ -1,6 +1,5 @@
 github:
   organisations:
-  - name: fabric8-updatebot
+  - name: jenkins-x
     repositories:
-    - name: updatebot
-    - name: updatebot-plugin
+    - name: builder-base
