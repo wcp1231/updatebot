@@ -133,7 +133,7 @@ public abstract class CommandSupport {
     }
 
     protected void discoverGitCredentials(Configuration configuration) {
-        Map<String,UserPassword> credentials = new HashMap<>();
+        Map<String,UserPassword> credentials = configuration.getGitCredentials();
         String home = System.getProperty("user.home", ".");
         File gitCredentials = new File(home, ".git-credentials");
         GitHelper.loadGitCredentials(credentials, gitCredentials);

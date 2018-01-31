@@ -74,7 +74,7 @@ public class GithubRepository extends GitRepository {
 
     @Override
     public String secureCloneUrl(Configuration configuration) {
-        if (configuration.isUseHttpsTransport()) {
+        if (configuration.isUseHttpsTransport() || configuration.getGitCredentials().containsKey("github.com")) {
             String username = configuration.getGithubUsername();
             String password = configuration.getGithubPassword();
             if (Strings.empty(username)) {

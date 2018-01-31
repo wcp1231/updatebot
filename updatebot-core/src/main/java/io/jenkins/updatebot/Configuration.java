@@ -24,6 +24,7 @@ import io.jenkins.updatebot.model.RepositoryConfig;
 import io.jenkins.updatebot.model.RepositoryConfigs;
 import io.jenkins.updatebot.support.Strings;
 import io.jenkins.updatebot.support.Systems;
+import io.jenkins.updatebot.support.UserPassword;
 import org.fusesource.jansi.Ansi;
 import org.kohsuke.github.AbuseLimitHandler;
 import org.kohsuke.github.GitHub;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -103,6 +105,7 @@ public class Configuration {
     private Map<String, String> npmEnvironmentVariables;
     private boolean ansiInitialised;
     private boolean useAnsi;
+    private Map<String, UserPassword> gitCredentials = new HashMap<>();
 
     public GitHub getGithub() throws IOException {
         if (github == null) {
@@ -416,5 +419,13 @@ public class Configuration {
         String configFile = getConfigFile();
         File sourceDir = getSourceDir();
         return RepositoryConfigs.loadRepositoryConfig(this, configFile, sourceDir);
+    }
+
+    public Map<String, UserPassword> getGitCredentials() {
+        return gitCredentials;
+    }
+
+    public void setGitCredentials(Map<String, UserPassword> gitCredentials) {
+        this.gitCredentials = gitCredentials;
     }
 }
