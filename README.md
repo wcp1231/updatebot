@@ -2,8 +2,8 @@
 
 A bot for updating dependencies on your projects automatically!
 
-[![Javadocs](http://www.javadoc.io/badge/io.fabric8.updatebot/updatebot-core.svg?color=blue)](http://www.javadoc.io/doc/io.fabric8.updatebot/updatebot-core)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8.updatebot/updatebot-core/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8.updatebot/updatebot-core/)
+[![Javadocs](http://www.javadoc.io/badge/io.jenkins.updatebot/updatebot-core.svg?color=blue)](http://www.javadoc.io/doc/io.jenkins.updatebot/updatebot-core)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.jenkins.updatebot/updatebot-core/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.jenkins.updatebot/updatebot-core/)
 ![Apache 2](http://img.shields.io/badge/license-Apache%202-red.svg)
 
 ### Configuration
