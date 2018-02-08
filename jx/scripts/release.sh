@@ -20,3 +20,4 @@ jx step nexus release
 jx step tag --version ${VERSION}
 
 updatebot push-version --kind docker UPDATEBOT_VERSION ${VERSION}
+updatebot update
