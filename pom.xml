@@ -78,7 +78,7 @@
     <fabric8.version>2.3.7</fabric8.version>
     <fabric8.maven.plugin.version>3.5.31</fabric8.maven.plugin.version>
 
-    <kohsuke.github-api.version>1.89</kohsuke.github-api.version>
+    <kohsuke.github-api.version>1.92</kohsuke.github-api.version>
     <jackson.version>2.9.1</jackson.version>
     <junit.version>4.12</junit.version>
     <maven.version>3.5.0</maven.version>
