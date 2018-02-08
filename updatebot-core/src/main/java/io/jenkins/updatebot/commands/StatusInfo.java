@@ -273,4 +273,9 @@ public class StatusInfo {
         }
         return null;
     }
+
+    public void logStatus(Logger log) {
+        // TODO
+
+    }
 }

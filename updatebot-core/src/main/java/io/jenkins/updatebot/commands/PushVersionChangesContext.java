@@ -15,8 +15,10 @@
  */
 package io.jenkins.updatebot.commands;
 
+import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.model.DependencyVersionChange;
+import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.Markdown;
 import io.fabric8.utils.Objects;
 
@@ -31,6 +33,11 @@ public class PushVersionChangesContext extends CommandContext {
 
     public PushVersionChangesContext(CommandContext parentContext, DependencyVersionChange step) {
         super(parentContext);
+        this.step = step;
+    }
+
+    public PushVersionChangesContext(LocalRepository repository, Configuration configuration, DependencyVersionChange step) {
+        super(repository, configuration);
         this.step = step;
     }
 
@@ -58,6 +65,7 @@ public class PushVersionChangesContext extends CommandContext {
         return createPullRequestTitlePrefix() + step.getVersion();
     }
 
+    
     @Override
     public String createPullRequestTitlePrefix() {
         return "update " + step.getDependency() + " to ";

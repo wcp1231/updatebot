@@ -19,6 +19,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import io.jenkins.updatebot.CommandNames;
+import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.jenkins.updatebot.repository.LocalRepository;
@@ -83,6 +84,14 @@ public class PushVersionChanges extends ModifyFilesCommandSupport {
     }
 
     @Override
+    protected CommandContext createCommandContext(LocalRepository repository, Configuration configuration) {
+        if (values.size() > 1) {
+            return new PushVersionChangesContext(repository, configuration, createDependencyVersionChange(0));
+        }
+        return super.createCommandContext(repository, configuration);
+    }
+
+    @Override
     protected boolean doProcess(CommandContext context) throws IOException {
         LocalRepository repository = context.getRepository();
         File dir = repository.getDir();
@@ -90,15 +99,19 @@ public class PushVersionChanges extends ModifyFilesCommandSupport {
 
         boolean answer = false;
         for (int i = 0; i + 1 < values.size(); i += 2) {
-            String propertyName = values.get(i);
-            String version = values.get(i + 1);
-            Kind kind = getKind();
-            DependencyVersionChange step = new DependencyVersionChange(kind, propertyName, version);
+            DependencyVersionChange step = createDependencyVersionChange(i);
             if (pushVersionsWithChecks(context, Arrays.asList(step))) {
                 answer = true;
             }
         }
         return answer;
+    }
+
+    protected DependencyVersionChange createDependencyVersionChange(int i) {
+        String propertyName = values.get(i);
+        String version = values.get(i + 1);
+        Kind kind = getKind();
+        return new DependencyVersionChange(kind, propertyName, version);
     }
 
 

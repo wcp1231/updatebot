@@ -130,7 +130,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
                     if (GitHubHelpers.isMergeable(pullRequest)) {
                         return;
                     }
-                    pullRequest.comment("[UpdateBot](https://github.com/fabric8io/updatebot) rebasing due to merge conflicts");
+                    pullRequest.comment("[UpdateBot](https://github.com/jenkins-x/updatebot) rebasing due to merge conflicts");
                 }
             } else {
                 //pullRequest.comment("Replacing previous commit");
