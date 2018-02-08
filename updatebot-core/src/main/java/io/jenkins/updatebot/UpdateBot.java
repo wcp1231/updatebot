@@ -24,6 +24,7 @@ import io.jenkins.updatebot.commands.PullVersionChanges;
 import io.jenkins.updatebot.commands.PushSourceChanges;
 import io.jenkins.updatebot.commands.PushVersionChanges;
 import io.jenkins.updatebot.commands.StatusInfo;
+import io.jenkins.updatebot.commands.UpdatePullRequestLoop;
 import io.jenkins.updatebot.commands.UpdatePullRequests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ import static io.jenkins.updatebot.CommandNames.PULL;
 import static io.jenkins.updatebot.CommandNames.PUSH_SOURCE;
 import static io.jenkins.updatebot.CommandNames.PUSH_VERSION;
 import static io.jenkins.updatebot.CommandNames.UPDATE;
+import static io.jenkins.updatebot.CommandNames.UPDATE_LOOP;
 
 /**
  */
@@ -74,6 +76,7 @@ public class UpdateBot {
         PushVersionChanges pushVersionChanges = new PushVersionChanges();
         PullVersionChanges pullVersionChanges = new PullVersionChanges();
         UpdatePullRequests updatePullRequests = new UpdatePullRequests();
+        UpdatePullRequestLoop updatePullRequestLoop = new UpdatePullRequestLoop();
         Help help = new Help();
 
         JCommander commander = JCommander.newBuilder()
@@ -83,6 +86,7 @@ public class UpdateBot {
                 .addCommand(PUSH_SOURCE, pushSourceChanges)
                 .addCommand(PUSH_VERSION, pushVersionChanges)
                 .addCommand(UPDATE, updatePullRequests)
+                .addCommand(UPDATE_LOOP, updatePullRequestLoop)
                 .build();
         commander.setExpandAtSign(false);
         commander.setProgramName("updatebot");
@@ -107,6 +111,9 @@ public class UpdateBot {
 
                 case UPDATE:
                     return updatePullRequests;
+
+                case UPDATE_LOOP:
+                    return updatePullRequestLoop;
             }
         }
         if (defaultToHelp) {

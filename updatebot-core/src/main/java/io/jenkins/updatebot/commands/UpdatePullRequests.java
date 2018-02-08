@@ -53,6 +53,14 @@ public class UpdatePullRequests extends CommandSupport {
     @Parameter(names = "--merge", description = "Whether we should merge Pull Requests that are Open and have a successful last commit status", arity = 1)
     private boolean mergeOnSuccess = true;
 
+    public boolean isMergeOnSuccess() {
+        return mergeOnSuccess;
+    }
+
+    public void setMergeOnSuccess(boolean mergeOnSuccess) {
+        this.mergeOnSuccess = mergeOnSuccess;
+    }
+
     @Override
     public void run(CommandContext context) throws IOException {
         Status contextStatus = Status.COMPLETE;
