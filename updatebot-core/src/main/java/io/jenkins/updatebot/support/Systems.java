@@ -48,6 +48,23 @@ public class Systems {
         }
     }
 
+
+    public static long getConfigLongValue(String envVar, long defaultValue) {
+        String value = getConfigValue(envVar, "").trim();
+        if (value.isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            LOG.warn("Failed to parse environment variable: " + envVar + " long value: " + value + ": " + e, e);
+            return defaultValue;
+        }
+    }
+
+
+
+
     /**
      * Returns true if the env var or system property is "true"
      */

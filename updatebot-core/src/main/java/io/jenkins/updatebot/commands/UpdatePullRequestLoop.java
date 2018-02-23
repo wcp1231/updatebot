@@ -19,6 +19,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import io.jenkins.updatebot.CommandNames;
 import io.jenkins.updatebot.Configuration;
+import io.jenkins.updatebot.support.Systems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.jenkins.updatebot.EnvironmentVariables.POLL_PERIOD;
+import static io.jenkins.updatebot.EnvironmentVariables.POLL_TIMEOUT;
 import static io.jenkins.updatebot.commands.StatusInfo.isPending;
 
 /**
@@ -41,10 +44,10 @@ public class UpdatePullRequestLoop extends CommandSupport {
     private boolean mergeOnSuccess = true;
 
     @Parameter(names = "--poll-time-ms", description = "The poll period", arity = 1)
-    private long pollTimeMillis = 5 * 1000;
+    private long pollTimeMillis = Systems.getConfigLongValue(POLL_PERIOD, 60 * 1000);
 
     @Parameter(names = "--loop-time-ms", description = "The maximum amount of time to wait for the Pull Requests to be ready to merge before terminating.", arity = 1)
-    private long loopTime = 60 * 60 * 1000;
+    private long loopTime = Systems.getConfigLongValue(POLL_TIMEOUT, 60 * 60 * 1000);
 
 
     @Override
