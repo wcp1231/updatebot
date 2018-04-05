@@ -23,6 +23,7 @@ import io.jenkins.updatebot.kind.make.MakeUpdater;
 import io.jenkins.updatebot.kind.maven.MavenUpdater;
 import io.jenkins.updatebot.kind.npm.PackageJsonUpdater;
 import io.jenkins.updatebot.kind.plugins.PluginsUpdater;
+import io.jenkins.updatebot.kind.regex.RegexUpdater;
 
 /**
  */
@@ -34,7 +35,8 @@ public enum Kind {
     PLUGINS("plugins", new PluginsUpdater()),
     BREW("brew", new BrewUpdater()),
     DOCKER("docker", new DockerUpdater()),
-    MAKE("make", new MakeUpdater());
+    MAKE("make", new MakeUpdater()),
+    REGEX("regex", new RegexUpdater());
 
     private String name;
     private Updater updater;
