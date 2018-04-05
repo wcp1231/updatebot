@@ -21,6 +21,7 @@ import io.jenkins.updatebot.commands.CommandSupport;
 import io.jenkins.updatebot.commands.Help;
 import io.jenkins.updatebot.commands.ParentContext;
 import io.jenkins.updatebot.commands.PullVersionChanges;
+import io.jenkins.updatebot.commands.PushRegexChanges;
 import io.jenkins.updatebot.commands.PushSourceChanges;
 import io.jenkins.updatebot.commands.PushVersionChanges;
 import io.jenkins.updatebot.commands.StatusInfo;
@@ -39,6 +40,7 @@ import java.util.Map;
 
 import static io.jenkins.updatebot.CommandNames.HELP;
 import static io.jenkins.updatebot.CommandNames.PULL;
+import static io.jenkins.updatebot.CommandNames.PUSH_REGEX;
 import static io.jenkins.updatebot.CommandNames.PUSH_SOURCE;
 import static io.jenkins.updatebot.CommandNames.PUSH_VERSION;
 import static io.jenkins.updatebot.CommandNames.UPDATE;
@@ -72,6 +74,7 @@ public class UpdateBot {
      * Parses the command from the given command line arguments or returns null if there is no command found
      */
     public static CommandSupport parseCommand(String[] args, Configuration config, boolean defaultToHelp) {
+        PushRegexChanges pushRegexChanges = new PushRegexChanges();
         PushSourceChanges pushSourceChanges = new PushSourceChanges();
         PushVersionChanges pushVersionChanges = new PushVersionChanges();
         PullVersionChanges pullVersionChanges = new PullVersionChanges();
@@ -83,6 +86,7 @@ public class UpdateBot {
                 .addObject(config)
                 .addCommand(HELP, help)
                 .addCommand(PULL, pullVersionChanges)
+                .addCommand(PUSH_REGEX, pushRegexChanges)
                 .addCommand(PUSH_SOURCE, pushSourceChanges)
                 .addCommand(PUSH_VERSION, pushVersionChanges)
                 .addCommand(UPDATE, updatePullRequests)
@@ -102,6 +106,9 @@ public class UpdateBot {
 
                 case PULL:
                     return pullVersionChanges;
+
+                case PUSH_REGEX:
+                    return pushRegexChanges;
 
                 case PUSH_SOURCE:
                     return pushSourceChanges;

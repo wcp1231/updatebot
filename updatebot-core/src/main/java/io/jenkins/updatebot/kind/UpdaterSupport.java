@@ -16,6 +16,7 @@
 package io.jenkins.updatebot.kind;
 
 import io.jenkins.updatebot.commands.CommandContext;
+import io.jenkins.updatebot.commands.PushRegexChanges;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 
 import java.io.IOException;
@@ -35,4 +36,5 @@ public abstract class UpdaterSupport implements Updater {
     public KindDependenciesCheck checkDependencies(CommandContext context, List<DependencyVersionChange> value) {
         return new KindDependenciesCheck(value);
     }
+
 }

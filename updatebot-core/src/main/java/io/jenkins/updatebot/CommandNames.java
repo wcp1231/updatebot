@@ -21,6 +21,7 @@ public final class CommandNames {
     public static final String HELP = "help";
     public static final String PULL = "pull";
     public static final String PUSH_VERSION = "push-version";
+    public static final String PUSH_REGEX = "push-regex";
     public static final String PUSH_SOURCE = "push";
     public static final String UPDATE = "update";
     public static final String UPDATE_LOOP = "update-loop";
