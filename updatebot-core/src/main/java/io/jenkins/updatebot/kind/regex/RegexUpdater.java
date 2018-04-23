@@ -27,7 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -72,7 +77,7 @@ public class RegexUpdater extends UpdaterSupport {
     protected boolean doPushRegex(PushRegexChanges command, CommandContext context, File file) throws IOException {
         boolean answer = false;
         if (Files.isFile(file)) {
-            String text = IOHelpers.readFully(file);
+            String text = IOHelpers.readFully(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
             String[] lines = text.split("\n");
             String regex = command.getRegex();
             String value = command.getValue();
