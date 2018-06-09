@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,10 @@ public class PomUpdateStatus {
     public static PomUpdateStatus createPomUpdateStatus(File file) throws IOException {
         Document doc = DecentXmlHelper.parseXmlFile(file);
         return new PomUpdateStatus(file, doc);
+    }
+
+    public boolean isUpdated() {
+        return updated;
     }
 
     public boolean isRootPom() {
@@ -94,15 +99,24 @@ public class PomUpdateStatus {
             String scope = change.getScope();
             boolean lazyAdd = shouldLazyAdd(change);
             if (Objects.equal(MavenScopes.PLUGIN, scope)) {
-                if (PomHelper.updatePluginVersion(doc, change, propertyChanges, lazyAdd)) {
-                    updated = true;
-                }
+                updatePluginVersion(change, lazyAdd, propertyChanges);
             } else {
                 if (PomHelper.updateDependencyVersion(doc, change, propertyChanges)) {
                     updated = true;
                 }
                 // TODO check for BOM / Parent change too!
             }
+        }
+    }
+
+    public void updatePluginVersion(String dependency,  String version, boolean lazyAdd) {
+        DependencyVersionChange change= new MavenDependencyVersionChange(dependency, version, MavenScopes.PLUGIN, true, null);
+        updatePluginVersion(change, lazyAdd, Collections.EMPTY_MAP);
+    }
+
+    public void updatePluginVersion(DependencyVersionChange change, boolean lazyAdd, Map<String, String> propertyChanges) {
+        if (PomHelper.updatePluginVersion(doc, change, propertyChanges, lazyAdd)) {
+            updated = true;
         }
     }
 
