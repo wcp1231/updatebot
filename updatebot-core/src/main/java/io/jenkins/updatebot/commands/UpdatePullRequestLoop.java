@@ -44,7 +44,7 @@ public class UpdatePullRequestLoop extends CommandSupport {
     private boolean mergeOnSuccess = true;
 
     @Parameter(names = "--poll-time-ms", description = "The poll period", arity = 1)
-    private long pollTimeMillis = Systems.getConfigLongValue(POLL_PERIOD, 60 * 1000);
+    private long pollTimeMillis = Systems.getConfigLongValue(POLL_PERIOD, 2 * 60 * 1000);
 
     @Parameter(names = "--loop-time-ms", description = "The maximum amount of time to wait for the Pull Requests to be ready to merge before terminating.", arity = 1)
     private long loopTime = Systems.getConfigLongValue(POLL_TIMEOUT, 60 * 60 * 1000);
