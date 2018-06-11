@@ -17,9 +17,15 @@ package io.jenkins.updatebot.support;
 
 import io.fabric8.utils.Files;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  */
@@ -64,4 +70,40 @@ public class FileHelper {
         }
         return false;
     }
+
+    /**
+     * Reads a {@link File} and returns the list of lines
+     */
+    public static List<String> readLines(File file) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        List<String> answer = new ArrayList<String>();
+        try {
+            while (true) {
+                String line = reader.readLine();
+                if (line != null) {
+                    answer.add(line);
+                } else {
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+        return answer;
+    }
+
+    /**
+     * Writes the given lines to the {@link File}
+     */
+    public static void writeLines(File file, List<String> lines) throws IOException {
+        PrintWriter writer = new PrintWriter(new FileWriter(file));
+        try {
+            for (String line : lines) {
+                writer.println(line);
+            }
+        } finally {
+            writer.close();
+        }
+    }
+
 }

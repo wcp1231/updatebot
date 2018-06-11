@@ -83,6 +83,17 @@ public class Strings {
         return answer;
     }
 
+    /**
+     * Trims the prefix
+     */
+    public static String trimPrefix(String text, String prefix) {
+        String answer = text;
+        if (answer.startsWith(prefix)) {
+            answer = answer.substring(prefix.length());
+        }
+        return answer;
+    }
+
     public static String toString(Object value) {
         if (value != null) {
             return value.toString();
