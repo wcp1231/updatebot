@@ -70,15 +70,18 @@ public class Requirements {
     public boolean applyChange(DependencyVersionChange change) {
         String name = change.getDependency();
         String version = change.getVersion();
-        ChartDependency dependency = dependency(name);
-        if (dependency != null) {
-            String oldVersion = dependency.getVersion();
-            if (oldVersion == null || !Objects.equals(oldVersion, version)) {
-                dependency.setVersion(version);
-                return true;
+        boolean answer = false;
+        if (dependencies != null) {
+            for (ChartDependency dependency : dependencies) {
+                if (Objects.equals(name, dependency.getName())) {
+                    String oldVersion = dependency.getVersion();
+                    if (oldVersion == null || !Objects.equals(oldVersion, version)) {
+                        dependency.setVersion(version);
+                        answer = true;
+                    }
+                }
             }
         }
-        return false;
-
+        return answer;
     }
 }
