@@ -126,9 +126,13 @@ public class DependencyVersionChange {
     }
 
     /**
-     * Returns true if this change matches the given artifact key
+     * Returns true if this change matches the given artifact key or if the group is the default Maven plugin group
+     * and the artifact id matches.
      */
     public boolean matches(String groupId, String artifactId) {
+        if (null == groupId && this.dependency.startsWith(MavenArtifactKey.DEFAULT_MAVEN_PLUGIN_GROUP + ":")) {
+            return this.dependency.endsWith(":" + artifactId);
+        }
         return matches(new MavenArtifactKey(groupId, artifactId));
     }
 
