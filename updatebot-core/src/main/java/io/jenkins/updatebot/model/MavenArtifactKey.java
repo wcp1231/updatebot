@@ -21,6 +21,8 @@ public class MavenArtifactKey implements Comparable<MavenArtifactKey> {
     private final String groupId;
     private final String artifactId;
 
+    public final static String DEFAULT_MAVEN_PLUGIN_GROUP = "org.apache.maven.plugins";
+
     public MavenArtifactKey(String groupId, String artifactId) {
         this.groupId = groupId;
         this.artifactId = artifactId;

@@ -16,6 +16,7 @@
 package io.fabric8.updatebot.maven;
 
 import io.jenkins.updatebot.kind.maven.PomUpdateStatus;
+import io.jenkins.updatebot.model.MavenArtifactKey;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -40,7 +41,7 @@ public class EnsurePluginVersionMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true)
     protected MavenProject project;
 
-    @Parameter(property = "group", defaultValue = "org.apache.maven.plugins")
+    @Parameter(property = "group", defaultValue = MavenArtifactKey.DEFAULT_MAVEN_PLUGIN_GROUP)
     protected String group;
 
     @Parameter(property = "artifact", required = true)
