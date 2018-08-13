@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -111,7 +112,7 @@ public class PomUpdateStatus {
 
     public void updatePluginVersion(String dependency,  String version, boolean lazyAdd) {
         DependencyVersionChange change= new MavenDependencyVersionChange(dependency, version, MavenScopes.PLUGIN, true, null);
-        updatePluginVersion(change, lazyAdd, Collections.EMPTY_MAP);
+        updatePluginVersion(change, lazyAdd, new HashMap<>());
     }
 
     public void updatePluginVersion(DependencyVersionChange change, boolean lazyAdd, Map<String, String> propertyChanges) {
