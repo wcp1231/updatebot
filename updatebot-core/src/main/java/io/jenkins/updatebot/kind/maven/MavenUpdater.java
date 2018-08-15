@@ -72,7 +72,7 @@ public class MavenUpdater extends UpdaterSupport implements Updater {
             String updateBotPluginVersion = VersionHelper.updateBotVersion();
             if (ProcessHelper.runCommandAndLogOutput(context.getConfiguration(), LOG, context.getDir(), env, mvnCommand,
                     "-B",
-                    "io.fabric8.updatebot:updatebot-maven-plugin:" + updateBotPluginVersion + ":export",
+                    "io.jenkins.updatebot:updatebot-maven-plugin:" + updateBotPluginVersion + ":export",
                     "-DdestFile=" + versionsFile, "-DupdateBotYaml=" + configFile)) {
                 if (!Files.isFile(versionsFile)) {
                     LOG.warn("Should have generated the export versions file " + versionsFile);
