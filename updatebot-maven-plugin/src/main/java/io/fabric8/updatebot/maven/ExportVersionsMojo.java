@@ -110,6 +110,15 @@ public class ExportVersionsMojo extends AbstractMojo {
             addArtifact(exportVersions, artifactKey, project.getVersion(), MavenScopes.ARTIFACT);
 
             log.debug("Collected project : " + project);
+            // Check if the parent needs to be updated
+            MavenProject parent = project.getParent();
+            if(parent != null) {
+                MavenArtifactKey parentKey = MavenHelper.toMavenDependency(parent);
+                if (dependencyFilter.matches(parentKey)) {
+                    addArtifact(exportVersions, parentKey, parent.getVersion(), MavenScopes.PARENT);
+                }
+            }
+
             List<Dependency> dependencies = project.getDependencies();
             for (Dependency dependency : dependencies) {
                 MavenArtifactKey dependencyKey = MavenHelper.toMavenDependency(dependency);

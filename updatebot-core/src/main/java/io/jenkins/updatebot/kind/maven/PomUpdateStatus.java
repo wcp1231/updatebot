@@ -101,6 +101,10 @@ public class PomUpdateStatus {
             boolean lazyAdd = shouldLazyAdd(change);
             if (Objects.equal(MavenScopes.PLUGIN, scope)) {
                 updatePluginVersion(change, lazyAdd, propertyChanges);
+            } else if (Objects.equal(MavenScopes.PARENT, scope)){
+                if(PomHelper.updateParentVersion(doc, change,propertyChanges)){
+                    updated = true;
+                }
             } else {
                 if (PomHelper.updateDependencyVersion(doc, change, propertyChanges)) {
                     updated = true;

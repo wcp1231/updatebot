@@ -18,6 +18,7 @@ package io.jenkins.updatebot.kind.maven;
 /**
  */
 public class MavenScopes {
+    public static final String PARENT = "parent";
     public static final String DEPENDENCY = "dependency";
     public static final String ARTIFACT = "artifact";
     public static final String PLUGIN = "plugin";
