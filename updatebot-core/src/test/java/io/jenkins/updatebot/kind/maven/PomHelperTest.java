@@ -176,6 +176,8 @@ public class PomHelperTest {
 
         changes.add(new DependencyVersionChange(Kind.MAVEN, "org.assertj:assertj-core", assertJVersion, MavenScopes.ARTIFACT));
 
+        changes.add(new DependencyVersionChange(Kind.MAVEN, "io.jenkins.updatebot:test-parent", parentVersion, MavenScopes.ARTIFACT));
+
         // BOM dependencies
         changes.add(new DependencyVersionChange(Kind.MAVEN, "io.fabric8:fabric8-project-bom-with-platform-deps", fabric8Version, MavenScopes.ARTIFACT));
         changes.add(new DependencyVersionChange(Kind.MAVEN, "org.springframework.boot:spring-boot-dependencies", springBootVersion, MavenScopes.ARTIFACT));

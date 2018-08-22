@@ -37,7 +37,7 @@ public final class VersionHelper {
      * Returns the version of updateBot to use
      */
     public static String updateBotVersion() {
-        return getVersion("io.fabric8.updatebot", "updatebot-core");
+        return getVersion("io.jenkins.updatebot", "updatebot-core");
     }
 
     /**

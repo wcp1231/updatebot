@@ -73,6 +73,7 @@ public class ExportVersionsMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
         File sourceDir = project.getBasedir();
+        log.info(">> Working on Dir: " + sourceDir);
         Configuration configuration = new Configuration();
         configuration.setSourceDir(sourceDir);
         try {
@@ -104,17 +105,25 @@ public class ExportVersionsMojo extends AbstractMojo {
         }
         Map<MavenArtifactKey, MavenArtifactVersionChange> exportVersions = new TreeMap<>();
 
+        if(project.getPackaging().equals("pom")){
+            MavenArtifactKey artifactKey = new MavenArtifactKey(project.getGroupId(), project.getArtifactId());
+            addArtifact(exportVersions, artifactKey, project.getVersion(), MavenScopes.ARTIFACT);
+        }
+
+
         List<MavenProject> projects = project.getCollectedProjects();
+        log.info("projects size: " + projects.size());
         for (MavenProject project : projects) {
             MavenArtifactKey artifactKey = new MavenArtifactKey(project.getGroupId(), project.getArtifactId());
             addArtifact(exportVersions, artifactKey, project.getVersion(), MavenScopes.ARTIFACT);
 
-            log.debug("Collected project : " + project);
+            log.info("Collected project : " + project);
             // Check if the parent needs to be updated
             MavenProject parent = project.getParent();
             if(parent != null) {
                 MavenArtifactKey parentKey = MavenHelper.toMavenDependency(parent);
                 if (dependencyFilter.matches(parentKey)) {
+                    log.info("    parent: " + parent);
                     addArtifact(exportVersions, parentKey, parent.getVersion(), MavenScopes.PARENT);
                 }
             }

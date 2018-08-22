@@ -33,6 +33,11 @@
   <description>Just a simple child project waiting to be updated, when the parent is updated</description>
 
   <dependencies>
+    <dependency>
+      <groupId>io.jenkins.updatebot</groupId>
+      <artifactId>test-parent</artifactId>
+      <version>0.1.0</version>
+    </dependency>
   </dependencies>
 
 
