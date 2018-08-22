@@ -62,8 +62,6 @@ public class MavenUpdater extends UpdaterSupport implements Updater {
     @Override
     public void addVersionChangesFromSource(CommandContext context, Dependencies dependencyConfig, List<DependencyVersionChange> list) throws IOException {
         File file = context.file("pom.xml");
-        context.info(LOG, ">> working with " + file);
-
         if (Files.isFile(file)) {
             // lets run the maven plugin to generate the export versions file
             Configuration configuration = context.getConfiguration();
@@ -72,7 +70,6 @@ public class MavenUpdater extends UpdaterSupport implements Updater {
             Map<String, String> env = configuration.getMvnEnvironmentVariables();
             String mvnCommand = configuration.getMvnCommand();
             String updateBotPluginVersion = VersionHelper.updateBotVersion();
-            context.info(LOG, ">> updateBotPluginVersion " + updateBotPluginVersion);
             if (ProcessHelper.runCommandAndLogOutput(context.getConfiguration(), LOG, context.getDir(), env, mvnCommand,
                     "-B",
                     "io.jenkins.updatebot:updatebot-maven-plugin:" + updateBotPluginVersion + ":export",
@@ -89,10 +86,8 @@ public class MavenUpdater extends UpdaterSupport implements Updater {
                     throw new IOException("Failed to load " + versionsFile + ". " + e, e);
                 }
                 List<MavenArtifactVersionChange> changeList = changes.getChanges();
-                context.info(LOG, ">> change list size " + changeList.size());
                 if (list != null) {
                     for (MavenArtifactVersionChange change : changeList) {
-                        context.info(LOG, ">> change: " + change.getGroupId() + " - " + change.getArtifactId() + " - " + change.getVersion() + " -" + change.getScope());
                         list.add(change.createDependencyVersionChange());
                     }
 

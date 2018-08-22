@@ -108,7 +108,7 @@ public class PomUpdateStatus {
                 if (PomHelper.updateDependencyVersion(doc, change, propertyChanges)) {
                     updated = true;
                 }
-                // TODO check for BOM / Parent change too!
+                // TODO check for BOM
             }
         }
     }

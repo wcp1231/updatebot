@@ -73,7 +73,6 @@ public class ExportVersionsMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         Log log = getLog();
         File sourceDir = project.getBasedir();
-        log.info(">> Working on Dir: " + sourceDir);
         Configuration configuration = new Configuration();
         configuration.setSourceDir(sourceDir);
         try {
@@ -109,15 +108,12 @@ public class ExportVersionsMojo extends AbstractMojo {
             MavenArtifactKey artifactKey = new MavenArtifactKey(project.getGroupId(), project.getArtifactId());
             addArtifact(exportVersions, artifactKey, project.getVersion(), MavenScopes.ARTIFACT);
         }
-
-
         List<MavenProject> projects = project.getCollectedProjects();
-        log.info("projects size: " + projects.size());
         for (MavenProject project : projects) {
             MavenArtifactKey artifactKey = new MavenArtifactKey(project.getGroupId(), project.getArtifactId());
             addArtifact(exportVersions, artifactKey, project.getVersion(), MavenScopes.ARTIFACT);
 
-            log.info("Collected project : " + project);
+            log.debug("Collected project : " + project);
             List<Dependency> dependencies = project.getDependencies();
             for (Dependency dependency : dependencies) {
                 MavenArtifactKey dependencyKey = MavenHelper.toMavenDependency(dependency);

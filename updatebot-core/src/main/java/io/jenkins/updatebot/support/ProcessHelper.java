@@ -201,7 +201,6 @@ public class ProcessHelper {
 
     protected static int doRunCommand(ProcessBuilder builder, String[] commands) {
         String line = String.join(" ", commands);
-        System.out.println(">>>>> running command: " + line);
         try {
             Process process = builder.start();
             int exitCode = process.waitFor();
