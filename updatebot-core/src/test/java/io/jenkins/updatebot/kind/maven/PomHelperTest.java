@@ -52,10 +52,9 @@ public class PomHelperTest {
         for (DependencyVersionChange change : changes) {
             if (Objects.equal(MavenScopes.PLUGIN, change.getScope())) {
                 assertPluginVersionChanged(file, doc, change);
-            } else if (Objects.equal(MavenScopes.PARENT, change.getScope())) {
-                assertParentVersionChanged(file, doc, change);
             } else {
                 assertDependencyVersionChanged(file, doc, change);
+                assertParentVersionChanged(file, doc, change);
             }
         }
     }
@@ -183,7 +182,7 @@ public class PomHelperTest {
         changes.add(new DependencyVersionChange(Kind.MAVEN, "org.springframework.boot:spring-boot-dependencies", springBootVersion, MavenScopes.ARTIFACT));
 
         // Parent POM
-        changes.add(new DependencyVersionChange(Kind.MAVEN, "io.jenkins.updatebot:test-parent", parentVersion, MavenScopes.PARENT));
+        changes.add(new DependencyVersionChange(Kind.MAVEN, "io.jenkins.updatebot:test-parent", parentVersion, MavenScopes.ARTIFACT));
 
         PomHelper.updatePomVersions(pomsToChange, changes);
 
