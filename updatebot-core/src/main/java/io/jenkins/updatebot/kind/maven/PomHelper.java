@@ -88,7 +88,33 @@ public class PomHelper {
             }
         }
     }
+    public static boolean updateParentVersion(Document doc, DependencyVersionChange change, Map<String, String> propertyChanges){
+        Element rootElement = doc.getRootElement();
+        List<Element> parents = DecentXmlHelper.findElementsWithName(rootElement, "parent");
 
+        boolean found = false;
+        String newVersion = change.getVersion();
+        boolean update = false;
+        for (Element element : parents) {
+            String groupId = DecentXmlHelper.firstChildTextContent(element, "groupId");
+            String artifactId = DecentXmlHelper.firstChildTextContent(element, "artifactId");
+            if (change.matches(groupId, artifactId)) {
+                found = true;
+                String version = DecentXmlHelper.firstChildTextContent(element, "version");
+                if (Strings.notEmpty(version)) {
+                    if (version.startsWith("${") && version.endsWith("}")) {
+                        String versionProperty = version.substring(2, version.length() - 1);
+                        propertyChanges.put(versionProperty, newVersion);
+                    } else {
+                        if (DecentXmlHelper.updateFirstChild(element, "version", newVersion)) {
+                            update = true;
+                        }
+                    }
+                }
+            }
+        }
+        return update;
+    }
 
     public static boolean updatePluginVersion(Document doc, DependencyVersionChange change, Map<String, String> propertyChanges, boolean lazyAdd) {
         Element rootElement = doc.getRootElement();

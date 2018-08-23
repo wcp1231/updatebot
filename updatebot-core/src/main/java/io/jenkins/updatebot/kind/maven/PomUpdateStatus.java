@@ -102,10 +102,13 @@ public class PomUpdateStatus {
             if (Objects.equal(MavenScopes.PLUGIN, scope)) {
                 updatePluginVersion(change, lazyAdd, propertyChanges);
             } else {
+                if (PomHelper.updateParentVersion(doc, change,propertyChanges)){
+                    updated = true;
+                }
                 if (PomHelper.updateDependencyVersion(doc, change, propertyChanges)) {
                     updated = true;
                 }
-                // TODO check for BOM / Parent change too!
+                // TODO check for BOM
             }
         }
     }

@@ -17,11 +17,11 @@ package io.jenkins.updatebot.kind.maven;
 
 import de.pdark.decentxml.Document;
 import de.pdark.decentxml.Element;
-import io.jenkins.updatebot.kind.Kind;
-import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.fabric8.updatebot.test.Tests;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
+import io.jenkins.updatebot.kind.Kind;
+import io.jenkins.updatebot.model.DependencyVersionChange;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +32,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.jenkins.updatebot.support.DecentXmlHelper.findElementsWithName;
-import static io.jenkins.updatebot.support.DecentXmlHelper.firstChild;
-import static io.jenkins.updatebot.support.DecentXmlHelper.firstChildTextContent;
-import static io.jenkins.updatebot.support.DecentXmlHelper.parseXmlFile;
+import static io.jenkins.updatebot.support.DecentXmlHelper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  */
@@ -51,6 +46,7 @@ public class PomHelperTest {
     String assertJVersion = "9.1.0";
     String fabric8Version = "9.2.0";
     String springBootVersion = "9.3.0";
+    String parentVersion = "0.1.1";
 
     protected static void assertChangesValid(File file, Document doc, List<DependencyVersionChange> changes) {
         for (DependencyVersionChange change : changes) {
@@ -58,8 +54,27 @@ public class PomHelperTest {
                 assertPluginVersionChanged(file, doc, change);
             } else {
                 assertDependencyVersionChanged(file, doc, change);
+                assertParentVersionChanged(file, doc, change);
             }
         }
+    }
+
+    protected static void assertParentVersionChanged(File file, Document doc, DependencyVersionChange change) {
+        List<Element> elements = findElementsWithName(doc.getRootElement(), "parent");
+        for (Element element : elements) {
+            String groupId = firstChildTextContent(element, "groupId");
+            String artifactId = firstChildTextContent(element, "artifactId");
+            String version = firstChildTextContent(element, "version");
+            if (Strings.notEmpty(groupId) && Strings.notEmpty(artifactId) && Strings.notEmpty(version)) {
+                if (change.matches(groupId, artifactId)) {
+                    if (!version.startsWith("$")) {
+                        LOG.info("File " + file + " has parent " + change.getDependency() + " version: " + version);
+                        assertThat(version).describedAs("File " + file + " parent version for " + change.getDependency()).isEqualTo(change.getVersion());
+                    }
+                }
+            }
+        }
+
     }
 
     protected static void assertPluginVersionChanged(File file, Document doc, DependencyVersionChange change) {
@@ -160,9 +175,14 @@ public class PomHelperTest {
 
         changes.add(new DependencyVersionChange(Kind.MAVEN, "org.assertj:assertj-core", assertJVersion, MavenScopes.ARTIFACT));
 
+        changes.add(new DependencyVersionChange(Kind.MAVEN, "io.jenkins.updatebot:test-parent", parentVersion, MavenScopes.ARTIFACT));
+
         // BOM dependencies
         changes.add(new DependencyVersionChange(Kind.MAVEN, "io.fabric8:fabric8-project-bom-with-platform-deps", fabric8Version, MavenScopes.ARTIFACT));
         changes.add(new DependencyVersionChange(Kind.MAVEN, "org.springframework.boot:spring-boot-dependencies", springBootVersion, MavenScopes.ARTIFACT));
+
+        // Parent POM
+        changes.add(new DependencyVersionChange(Kind.MAVEN, "io.jenkins.updatebot:test-parent", parentVersion, MavenScopes.ARTIFACT));
 
         PomHelper.updatePomVersions(pomsToChange, changes);
 

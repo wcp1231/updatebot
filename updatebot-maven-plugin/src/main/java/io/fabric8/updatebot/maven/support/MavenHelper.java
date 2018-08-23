@@ -17,11 +17,16 @@ package io.fabric8.updatebot.maven.support;
 
 import io.jenkins.updatebot.model.MavenArtifactKey;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.project.MavenProject;
 
 /**
  */
 public class MavenHelper {
     public static MavenArtifactKey toMavenDependency(Dependency dependency) {
         return new MavenArtifactKey(dependency.getGroupId(), dependency.getArtifactId());
+    }
+
+    public static MavenArtifactKey toMavenDependency(MavenProject parent) {
+        return new MavenArtifactKey(parent.getGroupId(), parent.getArtifactId());
     }
 }

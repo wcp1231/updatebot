@@ -104,6 +104,10 @@ public class ExportVersionsMojo extends AbstractMojo {
         }
         Map<MavenArtifactKey, MavenArtifactVersionChange> exportVersions = new TreeMap<>();
 
+        if(project.getPackaging().equals("pom")){
+            MavenArtifactKey artifactKey = new MavenArtifactKey(project.getGroupId(), project.getArtifactId());
+            addArtifact(exportVersions, artifactKey, project.getVersion(), MavenScopes.ARTIFACT);
+        }
         List<MavenProject> projects = project.getCollectedProjects();
         for (MavenProject project : projects) {
             MavenArtifactKey artifactKey = new MavenArtifactKey(project.getGroupId(), project.getArtifactId());
