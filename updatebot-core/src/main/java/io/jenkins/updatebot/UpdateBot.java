@@ -15,7 +15,28 @@
  */
 package io.jenkins.updatebot;
 
+import static io.jenkins.updatebot.CommandNames.HELP;
+import static io.jenkins.updatebot.CommandNames.PULL;
+import static io.jenkins.updatebot.CommandNames.PUSH_REGEX;
+import static io.jenkins.updatebot.CommandNames.PUSH_SOURCE;
+import static io.jenkins.updatebot.CommandNames.PUSH_VERSION;
+import static io.jenkins.updatebot.CommandNames.UPDATE;
+import static io.jenkins.updatebot.CommandNames.UPDATE_LOOP;
+import static io.jenkins.updatebot.CommandNames.VERSION;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.beust.jcommander.JCommander;
+
 import io.jenkins.updatebot.commands.CommandContext;
 import io.jenkins.updatebot.commands.CommandSupport;
 import io.jenkins.updatebot.commands.Help;
@@ -27,24 +48,7 @@ import io.jenkins.updatebot.commands.PushVersionChanges;
 import io.jenkins.updatebot.commands.StatusInfo;
 import io.jenkins.updatebot.commands.UpdatePullRequestLoop;
 import io.jenkins.updatebot.commands.UpdatePullRequests;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import static io.jenkins.updatebot.CommandNames.HELP;
-import static io.jenkins.updatebot.CommandNames.PULL;
-import static io.jenkins.updatebot.CommandNames.PUSH_REGEX;
-import static io.jenkins.updatebot.CommandNames.PUSH_SOURCE;
-import static io.jenkins.updatebot.CommandNames.PUSH_VERSION;
-import static io.jenkins.updatebot.CommandNames.UPDATE;
-import static io.jenkins.updatebot.CommandNames.UPDATE_LOOP;
+import io.jenkins.updatebot.commands.Version;
 
 /**
  */
@@ -81,10 +85,12 @@ public class UpdateBot {
         UpdatePullRequests updatePullRequests = new UpdatePullRequests();
         UpdatePullRequestLoop updatePullRequestLoop = new UpdatePullRequestLoop();
         Help help = new Help();
+        Version version = new Version();
 
         JCommander commander = JCommander.newBuilder()
                 .addObject(config)
                 .addCommand(HELP, help)
+                .addCommand(VERSION, version)
                 .addCommand(PULL, pullVersionChanges)
                 .addCommand(PUSH_REGEX, pushRegexChanges)
                 .addCommand(PUSH_SOURCE, pushSourceChanges)
@@ -103,6 +109,9 @@ public class UpdateBot {
             switch (parsedCommand) {
                 case HELP:
                     return help;
+
+                case VERSION:
+                    return version;
 
                 case PULL:
                     return pullVersionChanges;
