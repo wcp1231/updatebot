@@ -67,7 +67,7 @@ public class PushSourceChangesContext extends CommandContext {
 
     @Override
     public String createPullRequestTitlePrefix() {
-        return "push " + command.getRepositoryFullName() + " ";
+        return "update " + command.getRepositoryFullName() + " to ";
     }
 
 }
