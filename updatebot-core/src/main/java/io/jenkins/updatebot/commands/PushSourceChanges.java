@@ -18,9 +18,13 @@ package io.jenkins.updatebot.commands;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+
+import io.fabric8.utils.Files;
+import io.fabric8.utils.GitHelpers;
 import io.jenkins.updatebot.CommandNames;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.git.GitHelper;
+import io.jenkins.updatebot.git.GitRepositoryInfo;
 import io.jenkins.updatebot.kind.CompositeUpdater;
 import io.jenkins.updatebot.model.Dependencies;
 import io.jenkins.updatebot.model.DependencyVersionChange;
@@ -28,18 +32,14 @@ import io.jenkins.updatebot.model.GitRepository;
 import io.jenkins.updatebot.model.GitRepositoryConfig;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.Strings;
-import io.fabric8.utils.Files;
-import io.fabric8.utils.GitHelpers;
-import io.jenkins.updatebot.support.UserPassword;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Push changes from local source code into downstream projects
@@ -81,6 +81,7 @@ public class PushSourceChanges extends ModifyFilesCommandSupport {
         return sourceRepository.getFullName();
     }
 
+    @Override
     protected String getOperationDescription(CommandContext context) {
         LocalRepository sourceRepository = getSourceRepository();
         if (sourceRepository != null) {
@@ -142,7 +143,21 @@ public class PushSourceChanges extends ModifyFilesCommandSupport {
         if (sourceRepository == null) {
             File sourceDir = configuration.getSourceDir();
             if (sourceDir != null) {
-                GitRepository repo = new GitRepository(dir.getName());
+                // The name always defaults to '.' when running 'updatebot push' from local repository source folder
+                String name = sourceDir.getName();
+                // Extract repository info from clone url
+                GitRepositoryInfo gitRepositoryInfo = GitHelper.parseGitRepositoryInfo(this.cloneUrl);
+
+                // Let's try using local repository name from .updatebot.yml
+                GitRepositoryConfig local = getRepositoryConfig(configuration).getLocal();
+                if (local != null && !Strings.empty(local.getName())) {
+                        name = local.getName();
+                } // Default local repository name to 'organization/repository'
+                else if(gitRepositoryInfo != null) {
+                    name = gitRepositoryInfo.getOrganisation() +"/" +gitRepositoryInfo.getName();
+                }
+
+                GitRepository repo = new GitRepository(name);
                 // TODO create a GitHubRepository if we can figure that out
                 repo.setCloneUrl(getCloneUrl());
                 this.sourceRepository = new LocalRepository(repo, dir);
