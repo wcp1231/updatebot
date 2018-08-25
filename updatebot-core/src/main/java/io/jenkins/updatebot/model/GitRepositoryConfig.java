@@ -22,6 +22,7 @@ import io.jenkins.updatebot.support.Strings;
  */
 public class GitRepositoryConfig extends DtoSupport {
     private String name;
+    private String branch; // need to resolve branch name at runtime
     private Dependencies push;
     private Dependencies pull;
 
@@ -37,9 +38,10 @@ public class GitRepositoryConfig extends DtoSupport {
         String nameText = Strings.notEmpty(name) ? "name='" + name + '\'' : "";
         String pushText = push != null ? "push=" + push : "";
         String pullText = pull != null ? "pull=" + pull : "";
+        String branchText = pull != null ? "branch=" + branch : "";
 
         return "GitRepositoryConfig{" +
-                Strings.joinNotEmpty(", ", nameText, pushText, pullText) + '}';
+                Strings.joinNotEmpty(", ", nameText, pushText, pullText, branchText) + '}';
     }
 
     public String getName() {
@@ -64,6 +66,14 @@ public class GitRepositoryConfig extends DtoSupport {
 
     public void setPull(Dependencies pull) {
         this.pull = pull;
+    }
+
+    public String getBranch() {
+        return this.branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
     }
 
 }

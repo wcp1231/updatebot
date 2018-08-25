@@ -15,6 +15,7 @@
  */
 package io.jenkins.updatebot.commands;
 
+import io.fabric8.utils.Objects;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.github.GitHubHelpers;
 import io.jenkins.updatebot.github.Issues;
@@ -24,7 +25,9 @@ import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.kind.KindDependenciesCheck;
 import io.jenkins.updatebot.kind.Updater;
 import io.jenkins.updatebot.model.DependencyVersionChange;
-import io.fabric8.utils.Objects;
+import io.jenkins.updatebot.repository.LocalRepository;
+import io.jenkins.updatebot.support.FileHelper;
+
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueComment;
@@ -66,9 +69,17 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     // Implementation methods
     //-------------------------------------------------------------------------
     protected void prepareDirectory(CommandContext context) {
-        File dir = context.getRepository().getDir();
+        LocalRepository localRepository = context.getRepository();
+        File dir = localRepository.getDir();
+        Configuration configuration = context.getConfiguration();
+
+        // Always resolve remote branch at runtime for PRs
+        String branch = context.getRepository().resolveRemoteBranch();
+
         dir.getParentFile().mkdirs();
-        context.getGit().stashAndCheckoutMaster(dir);
+
+        configuration.info(LOG, "Checkout branch: " + branch + " from " + localRepository.getFullName() + " in " + FileHelper.getRelativePathToCurrentDir(dir));
+        context.getGit().stashAndCheckoutBranch(dir, branch);
     }
 
     protected boolean doProcess(CommandContext context) throws IOException {
@@ -90,6 +101,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     protected void processPullRequest(CommandContext context, GHRepository ghRepository, GHPullRequest pullRequest) throws IOException {
         Configuration configuration = context.getConfiguration();
         String title = context.createPullRequestTitle();
+
         File dir = context.getDir();
 /*
         TODO this should already be set right? Otherwise we'll overwrite the HTTPS URL
@@ -101,6 +113,9 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
         String commandComment = createPullRequestComment();
 
         if (pullRequest == null) {
+            // Let's resolve Github remote branch from configuration
+            String remoteBranch = getRemoteBranch(configuration, ghRepository);
+
             String localBranch = "updatebot-" + UUID.randomUUID().toString();
             doCommit(context, dir, localBranch);
 
@@ -112,7 +127,8 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
                 context.warn(LOG, "Failed to push branch " + localBranch + " for " + context.getCloneUrl());
                 return;
             }
-            pullRequest = ghRepository.createPullRequest(title, head, "master", body);
+
+            pullRequest = ghRepository.createPullRequest(title, head, remoteBranch, body);
             context.setPullRequest(pullRequest);
             context.info(LOG, configuration.colored(Configuration.COLOR_PENDING, "Created pull request " + pullRequest.getHtmlUrl()));
 
@@ -154,6 +170,12 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
             }
             context.info(LOG, "Updated PR " + pullRequest.getHtmlUrl());
         }
+    }
+
+    public String getRemoteBranch(Configuration configuration, GHRepository ghRepository) throws IOException {
+        LocalRepository repository = LocalRepository.findRepository(getLocalRepositories(configuration), ghRepository);
+
+        return repository.getRemoteBranch();
     }
 
     private void addIssueClosedCommentIfRequired(CommandContext context, GHPullRequest pullRequest, boolean create) {

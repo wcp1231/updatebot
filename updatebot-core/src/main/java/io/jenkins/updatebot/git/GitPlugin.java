@@ -57,5 +57,7 @@ public interface GitPlugin {
 
     boolean stashAndCheckoutMaster(File dir);
 
+    boolean stashAndCheckoutBranch(File dir, String branch);
+
     void revertChanges(File dir) throws IOException;
 }

@@ -118,8 +118,13 @@ public class GitPluginCLI implements GitPlugin {
 
     @Override
     public boolean stashAndCheckoutMaster(File dir) {
+        return stashAndCheckoutBranch(dir, "master");
+    }
+
+    @Override
+    public boolean stashAndCheckoutBranch(File dir, String branch) {
         if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "stash") == 0) {
-            if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", "master") == 0) {
+            if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", branch) == 0) {
                 return true;
             }
         }

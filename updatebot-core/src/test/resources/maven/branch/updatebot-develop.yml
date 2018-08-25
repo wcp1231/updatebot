@@ -1,0 +1,13 @@
+github:
+  organisations:
+  - name: jstrachan-testing
+    repositories:
+    - name: updatebot
+      branch: develop
+      push:
+        maven:
+          dependencies:
+          - groupInclude: org.apache*
+          - groupInclude: org.springframework
+          - artifactInclude: foo-bar
+
