@@ -1,7 +1,4 @@
 pipeline {
-  environment {
-    GH_CREDS = credentials('jenkins-x-github')
-  }
   agent {
     label "jenkins-maven"
   }
