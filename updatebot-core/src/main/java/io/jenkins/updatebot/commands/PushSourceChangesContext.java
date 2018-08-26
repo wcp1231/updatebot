@@ -56,7 +56,7 @@ public class PushSourceChangesContext extends CommandContext {
     public String createCommit() {
         String gitUrl = command.getRepositoryFullName();
         String ref = command.getRef();
-        return "fix(versions): " + gitUrl + "\n\n" +
+        return "fix(versions): push " + gitUrl + " ref: " + ref + "\n\n" +
                 "Push version changes from the source code in repository: " + gitUrl + " ref: " + ref + "\n";
     }
 
