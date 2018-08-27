@@ -15,13 +15,14 @@
  */
 package io.jenkins.updatebot.support;
 
-import io.fabric8.utils.Files;
-import org.springframework.util.AntPathMatcher;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.util.AntPathMatcher;
+
+import io.fabric8.utils.Files;
 
 /**
  */
@@ -55,7 +56,7 @@ public class FileMatcher {
             }
         } else {
             String path = Files.getRelativePath(rootDir, file);
-            path = Strings.trimAllPrefix(path, "/");
+            path = Strings.trimAllPrefix(path, File.separator);
             if (matchesPatterns(path, includes) && !matchesPatterns(path, excludes)) {
                 answer.add(file);
             }

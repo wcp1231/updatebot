@@ -15,6 +15,7 @@
  */
 package io.jenkins.updatebot.repository;
 
+import io.fabric8.utils.Filter;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.github.GitHubHelpers;
 import io.jenkins.updatebot.model.GitHubProjects;
@@ -25,7 +26,7 @@ import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.model.RepositoryConfig;
 import io.jenkins.updatebot.support.FileHelper;
 import io.jenkins.updatebot.support.Strings;
-import io.fabric8.utils.Filter;
+
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -59,9 +60,15 @@ public class Repositories {
         File dir = repository.getDir();
         String secureCloneUrl = repository.getRepo().secureCloneUrl(configuration);
         File gitDir = new File(dir, ".git");
+
         if (gitDir.exists()) {
-            if (configuration.getGit().stashAndCheckoutMaster(dir)) {
+            // Let's resolve clone branch from local repository
+            String branch = repository.resolveRemoteBranch();
+
+            configuration.info(LOG, "Checkout branch: " + branch + " from " + repository.getFullName() + " in " + FileHelper.getRelativePathToCurrentDir(dir));
+            if (configuration.getGit().stashAndCheckoutBranch(dir, branch)) {
                 if (!configuration.isPullDisabled()) {
+                    configuration.info(LOG, "Pull branch: " + branch + " from " + repository.getFullName() + " in " + FileHelper.getRelativePathToCurrentDir(dir));
                     configuration.getGit().pull(dir, repository.getCloneUrl());
                 }
             }

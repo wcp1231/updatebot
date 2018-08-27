@@ -18,6 +18,7 @@ package io.jenkins.updatebot;
 /**
  */
 public final class CommandNames {
+    public static final String VERSION = "version";
     public static final String HELP = "help";
     public static final String PULL = "pull";
     public static final String PUSH_VERSION = "push-version";
