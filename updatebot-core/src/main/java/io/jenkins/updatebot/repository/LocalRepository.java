@@ -197,7 +197,10 @@ public class LocalRepository {
             if (ghRepository != null) {
                 config.setBranch(ghRepository.getDefaultBranch());
             }
-        } else {
+        }
+
+        // Fallback to master branch for Git repositories
+        if(Strings.empty(config.getBranch())) {
             config.setBranch("master");
         }
 
