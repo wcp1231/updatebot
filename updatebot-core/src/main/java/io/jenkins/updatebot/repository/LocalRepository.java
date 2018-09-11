@@ -220,7 +220,10 @@ public class LocalRepository {
      */
     public String getRemoteBranch() {
         GitRepositoryConfig config = repo.getRepositoryDetails();
-
+        if (config == null) {
+            LOG.warn("The repo has no config!");
+            return "master";
+        }
         return config.getBranch();
     }
 }
