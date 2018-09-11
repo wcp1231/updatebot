@@ -29,6 +29,8 @@ import io.jenkins.updatebot.model.RepositoryConfigs;
 import io.jenkins.updatebot.support.Strings;
 
 import org.kohsuke.github.GHRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,8 @@ import java.util.List;
 /**
  */
 public class LocalRepository {
+    private static final transient Logger LOG = LoggerFactory.getLogger(LocalRepository.class);
+
     private GitRepository repo;
     private File dir;
 
@@ -188,7 +192,10 @@ public class LocalRepository {
     public String resolveRemoteBranch() {
         // Let's try use repository branch from .updatebot.yml first
         GitRepositoryConfig config = repo.getRepositoryDetails();
-
+        if (config == null) {
+            LOG.warn("The repo has no config!");
+            return "master";
+        }
         if(!Strings.empty(config.getBranch())) {
             return config.getBranch();
         } // Try detect Github repository and use its default branch
