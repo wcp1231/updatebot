@@ -25,6 +25,7 @@ import io.jenkins.updatebot.github.PullRequests;
 import io.jenkins.updatebot.support.Markdown;
 import io.jenkins.updatebot.support.Strings;
 import io.fabric8.utils.Objects;
+import io.jenkins.updatebot.support.Systems;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssue;
@@ -38,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+import static io.jenkins.updatebot.EnvironmentVariables.CHECK_PR_STATUS;
+import static io.jenkins.updatebot.EnvironmentVariables.MERGE;
 import static io.jenkins.updatebot.github.GitHubHelpers.getLastCommitStatus;
 import static io.jenkins.updatebot.github.Issues.getLabels;
 import static io.jenkins.updatebot.github.Issues.isOpen;
@@ -51,10 +54,10 @@ public class UpdatePullRequests extends CommandSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(UpdatePullRequests.class);
 
     @Parameter(names = "--merge", description = "Whether we should merge Pull Requests that are Open and have a successful last commit status", arity = 1)
-    private boolean mergeOnSuccess = true;
+    private boolean mergeOnSuccess = Systems.isConfigBoolean(MERGE,true);
 
     @Parameter(names = "--check-pr-status", description = "Whether we should check the status of Pull Requests before merging them", arity = 1)
-    private boolean checkPrStatus = true;
+    private boolean checkPrStatus = Systems.isConfigBoolean(CHECK_PR_STATUS,true);
 
     public boolean isMergeOnSuccess() {
         return mergeOnSuccess;

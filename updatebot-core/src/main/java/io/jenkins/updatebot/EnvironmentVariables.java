@@ -29,6 +29,9 @@ public class EnvironmentVariables {
     public static final String POLL_PERIOD = "UPDATEBOT_POLL_PERIOD";
     public static final String POLL_TIMEOUT = "UPDATEBOT_POLL_TIMEOUT";
 
+    public static final String MERGE = "UPDATEBOT_MERGE";
+    public static final String CHECK_PR_STATUS = "UPDATEBOT_CHECK_PR_STATUS";
+
     public static final String DRY_RUN = "UPDATEBOT_DRY_RUN";
 
     public static final String MVN_COMMAND = "UPDATEBOT_MVN_COMMAND";

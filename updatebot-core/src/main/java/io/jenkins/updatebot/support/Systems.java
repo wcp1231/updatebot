@@ -72,4 +72,16 @@ public class Systems {
         String value = getConfigValue(envVar);
         return value != null && value.equalsIgnoreCase("true");
     }
+
+    /**
+     * Returns value of the env var or system property if set, otherwise the specified default value
+     * Different from a flag as a flag is always false if not present
+     */
+    public static boolean isConfigBoolean(String envVar, boolean defaultValue) {
+        String value = getConfigValue(envVar);
+        if( value != null ){
+            return Boolean.parseBoolean(envVar);
+        }
+        return defaultValue;
+    }
 }

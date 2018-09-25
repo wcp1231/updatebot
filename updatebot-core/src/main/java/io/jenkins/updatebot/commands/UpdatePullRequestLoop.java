@@ -31,6 +31,8 @@ import java.util.Map;
 
 import static io.jenkins.updatebot.EnvironmentVariables.POLL_PERIOD;
 import static io.jenkins.updatebot.EnvironmentVariables.POLL_TIMEOUT;
+import static io.jenkins.updatebot.EnvironmentVariables.MERGE;
+import static io.jenkins.updatebot.EnvironmentVariables.CHECK_PR_STATUS;
 import static io.jenkins.updatebot.commands.StatusInfo.isPending;
 
 /**
@@ -41,10 +43,10 @@ public class UpdatePullRequestLoop extends CommandSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(UpdatePullRequestLoop.class);
 
     @Parameter(names = "--merge", description = "Whether we should merge Pull Requests that are Open and have a successful last commit status", arity = 1)
-    private boolean mergeOnSuccess = true;
+    private boolean mergeOnSuccess = Systems.isConfigBoolean(MERGE,true);
 
     @Parameter(names = "--check-pr-status", description = "Whether we should check the status of Pull Requests before merging them", arity = 1)
-    private boolean checkPrStatus = true;
+    private boolean checkPrStatus = Systems.isConfigBoolean(CHECK_PR_STATUS,true);
 
     @Parameter(names = "--poll-time-ms", description = "The poll period", arity = 1)
     private long pollTimeMillis = Systems.getConfigLongValue(POLL_PERIOD, 2 * 60 * 1000);
@@ -123,6 +125,7 @@ public class UpdatePullRequestLoop extends CommandSupport {
     protected UpdatePullRequests createUpdatePullRequestsCommand() {
         UpdatePullRequests answer = new UpdatePullRequests();
         answer.setMergeOnSuccess(mergeOnSuccess);
+        answer.setCheckPrStatus(checkPrStatus);
         return answer;
     }
 
