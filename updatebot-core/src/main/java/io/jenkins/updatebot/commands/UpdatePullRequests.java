@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static io.jenkins.updatebot.EnvironmentVariables.CHECK_PR_STATUS;
+import static io.jenkins.updatebot.EnvironmentVariables.DELETE_MERGED_BRANCHES;
 import static io.jenkins.updatebot.EnvironmentVariables.MERGE;
 import static io.jenkins.updatebot.github.GitHubHelpers.getLastCommitStatus;
 import static io.jenkins.updatebot.github.Issues.getLabels;
@@ -59,6 +60,9 @@ public class UpdatePullRequests extends CommandSupport {
     @Parameter(names = "--check-pr-status", description = "Whether we should check the status of Pull Requests before merging them", arity = 1)
     private boolean checkPrStatus = Systems.isConfigBoolean(CHECK_PR_STATUS,true);
 
+    @Parameter(names = "--delete-merged-branches", description = "Whether we should delete updatebot branches after merging them", arity = 1)
+    private boolean deleteMergedBranches = Systems.isConfigBoolean(DELETE_MERGED_BRANCHES,true);
+
     public boolean isMergeOnSuccess() {
         return mergeOnSuccess;
     }
@@ -73,6 +77,14 @@ public class UpdatePullRequests extends CommandSupport {
 
     public void setCheckPrStatus(boolean checkPrStatus) {
         this.checkPrStatus = checkPrStatus;
+    }
+
+    public boolean isDeleteMergedBranches() {
+        return deleteMergedBranches;
+    }
+
+    public void setDeleteMergedBranches(boolean deleteMergedBranches) {
+        this.deleteMergedBranches = deleteMergedBranches;
     }
 
     @Override
@@ -130,6 +142,9 @@ public class UpdatePullRequests extends CommandSupport {
                     }
                 }
             }
+        }
+        if(contextStatus == Status.COMPLETE && deleteMergedBranches){
+            GitHubHelpers.deleteUpdateBotBranches(ghRepository);
         }
         context.setStatus(contextStatus);
     }

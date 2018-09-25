@@ -19,6 +19,7 @@ import io.jenkins.updatebot.model.GitRepository;
 import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.fabric8.utils.Objects;
+import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHLabel;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
@@ -109,20 +111,26 @@ public class GitHubHelpers {
     }
 
     public static void deleteUpdateBotBranches(List<LocalRepository> localRepositories) throws IOException {
-/*
+
         for (LocalRepository localRepository : localRepositories) {
             GHRepository ghRepository = getGitHubRepository(localRepository);
-            if (ghRepository != null) {
-                Map<String, GHBranch> branches = ghRepository.getBranches();
-                for (GHBranch ghBranch : branches.values()) {
-                    String name = ghBranch.getName();
-                    if (name.startsWith("updatebot-")) {
-                        // TODO no API to delete branches yet
-                    }
+            deleteUpdateBotBranches(ghRepository);
+        }
+
+    }
+
+    public static void deleteUpdateBotBranches(GHRepository ghRepository) throws IOException {
+        if (ghRepository != null) {
+            Map<String, GHBranch> branches = ghRepository.getBranches();
+            for (GHBranch ghBranch : branches.values()) {
+                String name = ghBranch.getName();
+                if (name.startsWith("updatebot-")) {
+                    //delete as per https://github.com/kohsuke/github-api/pull/164#issuecomment-78391771
+                    //heads needed as per https://developer.github.com/v3/git/refs/#get-a-reference
+                    ghRepository.getRef("heads/"+ghBranch.getName()).delete();
                 }
             }
         }
-*/
     }
 
     public static GHPerson getOrganisationOrUser(GitHub github, String orgName) {
