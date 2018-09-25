@@ -53,12 +53,23 @@ public class UpdatePullRequests extends CommandSupport {
     @Parameter(names = "--merge", description = "Whether we should merge Pull Requests that are Open and have a successful last commit status", arity = 1)
     private boolean mergeOnSuccess = true;
 
+    @Parameter(names = "--check-pr-status", description = "Whether we should check the status of Pull Requests before merging them", arity = 1)
+    private boolean checkPrStatus = true;
+
     public boolean isMergeOnSuccess() {
         return mergeOnSuccess;
     }
 
     public void setMergeOnSuccess(boolean mergeOnSuccess) {
         this.mergeOnSuccess = mergeOnSuccess;
+    }
+
+    public boolean isCheckPrStatus() {
+        return checkPrStatus;
+    }
+
+    public void setCheckPrStatus(boolean checkPrStatus) {
+        this.checkPrStatus = checkPrStatus;
     }
 
     @Override
@@ -79,7 +90,7 @@ public class UpdatePullRequests extends CommandSupport {
                 if (GitHubHelpers.hasLabel(getLabels(pullRequest), configuration.getGithubPullRequestLabel())) {
                     context.setPullRequest(pullRequest);
 
-                    if (!GitHubHelpers.isMergeable(pullRequest)) {
+                    if (!GitHubHelpers.isMergeable(pullRequest) && checkPrStatus) {
                         // lets re-run the update commands we can find on the PR
                         CompositeCommand commands = loadCommandsFromPullRequest(context, ghRepository, pullRequest);
                         if (commands != null) {
@@ -87,7 +98,7 @@ public class UpdatePullRequests extends CommandSupport {
                         }
                     }
 
-                    if (mergeOnSuccess) {
+                    if (mergeOnSuccess && checkPrStatus) {
                         try {
                             GHCommitStatus status = getLastCommitStatus(ghRepository, pullRequest);
                             if (status != null) {
@@ -99,6 +110,16 @@ public class UpdatePullRequests extends CommandSupport {
                             }
                         } catch (IOException e) {
                             context.warn(LOG, "Failed to find last commit status for PR " + pullRequest.getHtmlUrl() + " " + e, e);
+                        }
+                    }
+
+                    //if pr status checks are skipped then just attempt to merge
+                    if (!checkPrStatus) {
+                        try {
+                            String message = Markdown.UPDATEBOT_ICON + " merging this pull request - checks on PR status were skipped";
+                            pullRequest.merge(message);
+                        } catch (IOException e) {
+                            context.warn(LOG, "Failed to merge PR " + pullRequest.getHtmlUrl() + " " + e, e);
                         }
                     }
                     if (isOpen(pullRequest)) {

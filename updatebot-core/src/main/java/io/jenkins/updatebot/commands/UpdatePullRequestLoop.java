@@ -43,6 +43,9 @@ public class UpdatePullRequestLoop extends CommandSupport {
     @Parameter(names = "--merge", description = "Whether we should merge Pull Requests that are Open and have a successful last commit status", arity = 1)
     private boolean mergeOnSuccess = true;
 
+    @Parameter(names = "--check-pr-status", description = "Whether we should check the status of Pull Requests before merging them", arity = 1)
+    private boolean checkPrStatus = true;
+
     @Parameter(names = "--poll-time-ms", description = "The poll period", arity = 1)
     private long pollTimeMillis = Systems.getConfigLongValue(POLL_PERIOD, 2 * 60 * 1000);
 
