@@ -37,11 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static io.jenkins.updatebot.EnvironmentVariables.CHECK_PR_STATUS;
 import static io.jenkins.updatebot.EnvironmentVariables.DELETE_MERGED_BRANCHES;
 import static io.jenkins.updatebot.EnvironmentVariables.MERGE;
+import static io.jenkins.updatebot.EnvironmentVariables.MERGE_METHOD;
 import static io.jenkins.updatebot.github.GitHubHelpers.getLastCommitStatus;
 import static io.jenkins.updatebot.github.Issues.getLabels;
 import static io.jenkins.updatebot.github.Issues.isOpen;
@@ -62,6 +64,9 @@ public class UpdatePullRequests extends CommandSupport {
 
     @Parameter(names = "--delete-merged-branches", description = "Whether we should delete updatebot branches after merging them", arity = 1)
     private boolean deleteMergedBranches = Systems.isConfigBoolean(DELETE_MERGED_BRANCHES,true);
+
+    @Parameter(names = "--merge-method", description = "merge, rebase or squash. Default is merge", arity = 1)
+    private String mergeMethod = Systems.getConfigValue(MERGE_METHOD,"merge");
 
     public boolean isMergeOnSuccess() {
         return mergeOnSuccess;
@@ -85,6 +90,14 @@ public class UpdatePullRequests extends CommandSupport {
 
     public void setDeleteMergedBranches(boolean deleteMergedBranches) {
         this.deleteMergedBranches = deleteMergedBranches;
+    }
+
+    public String getMergeMethod() {
+        return mergeMethod;
+    }
+
+    public void setMergeMethod(String mergeMethod) {
+        this.mergeMethod = mergeMethod;
     }
 
     @Override
@@ -120,7 +133,8 @@ public class UpdatePullRequests extends CommandSupport {
                                 GHCommitState state = status.getState();
                                 if (state != null && state.equals(GHCommitState.SUCCESS)) {
                                     String message = Markdown.UPDATEBOT_ICON + " merging this pull request as its CI was successful";
-                                    pullRequest.merge(message);
+                                    mergePr(pullRequest, message);
+
                                 }
                             }
                         } catch (IOException e) {
@@ -132,7 +146,7 @@ public class UpdatePullRequests extends CommandSupport {
                     if (!checkPrStatus) {
                         try {
                             String message = Markdown.UPDATEBOT_ICON + " merging this pull request - checks on PR status were skipped";
-                            pullRequest.merge(message);
+                            mergePr(pullRequest,message);
                         } catch (IOException e) {
                             context.warn(LOG, "Failed to merge PR " + pullRequest.getHtmlUrl() + " " + e, e);
                         }
@@ -147,6 +161,13 @@ public class UpdatePullRequests extends CommandSupport {
             GitHubHelpers.deleteUpdateBotBranches(ghRepository);
         }
         context.setStatus(contextStatus);
+    }
+
+    public void mergePr(GHPullRequest pullRequest, String message) throws IOException {
+        //match merge method to enum, case insensitive
+        GHPullRequest.MergeMethod gitMergeMethod = Arrays.stream(GHPullRequest.MergeMethod.values())
+                .filter(e -> e.name().equalsIgnoreCase(mergeMethod)).findAny().orElse(GHPullRequest.MergeMethod.MERGE);
+        pullRequest.merge(message,null,gitMergeMethod);
     }
 
     /**
