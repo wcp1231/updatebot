@@ -25,6 +25,7 @@ import io.jenkins.updatebot.github.PullRequests;
 import io.jenkins.updatebot.support.Markdown;
 import io.jenkins.updatebot.support.Strings;
 import io.fabric8.utils.Objects;
+import io.jenkins.updatebot.support.Systems;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssue;
@@ -36,8 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
+import static io.jenkins.updatebot.EnvironmentVariables.CHECK_PR_STATUS;
+import static io.jenkins.updatebot.EnvironmentVariables.DELETE_MERGED_BRANCHES;
+import static io.jenkins.updatebot.EnvironmentVariables.MERGE;
+import static io.jenkins.updatebot.EnvironmentVariables.MERGE_METHOD;
 import static io.jenkins.updatebot.github.GitHubHelpers.getLastCommitStatus;
 import static io.jenkins.updatebot.github.Issues.getLabels;
 import static io.jenkins.updatebot.github.Issues.isOpen;
@@ -51,7 +57,16 @@ public class UpdatePullRequests extends CommandSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(UpdatePullRequests.class);
 
     @Parameter(names = "--merge", description = "Whether we should merge Pull Requests that are Open and have a successful last commit status", arity = 1)
-    private boolean mergeOnSuccess = true;
+    private boolean mergeOnSuccess = Systems.isConfigBoolean(MERGE,true);
+
+    @Parameter(names = "--check-pr-status", description = "Whether we should check the status of Pull Requests before merging them", arity = 1)
+    private boolean checkPrStatus = Systems.isConfigBoolean(CHECK_PR_STATUS,true);
+
+    @Parameter(names = "--delete-merged-branches", description = "Whether we should delete updatebot branches after merging them", arity = 1)
+    private boolean deleteMergedBranches = Systems.isConfigBoolean(DELETE_MERGED_BRANCHES,true);
+
+    @Parameter(names = "--merge-method", description = "merge, rebase or squash. Default is merge", arity = 1)
+    private String mergeMethod = Systems.getConfigValue(MERGE_METHOD,"merge");
 
     public boolean isMergeOnSuccess() {
         return mergeOnSuccess;
@@ -59,6 +74,30 @@ public class UpdatePullRequests extends CommandSupport {
 
     public void setMergeOnSuccess(boolean mergeOnSuccess) {
         this.mergeOnSuccess = mergeOnSuccess;
+    }
+
+    public boolean isCheckPrStatus() {
+        return checkPrStatus;
+    }
+
+    public void setCheckPrStatus(boolean checkPrStatus) {
+        this.checkPrStatus = checkPrStatus;
+    }
+
+    public boolean isDeleteMergedBranches() {
+        return deleteMergedBranches;
+    }
+
+    public void setDeleteMergedBranches(boolean deleteMergedBranches) {
+        this.deleteMergedBranches = deleteMergedBranches;
+    }
+
+    public String getMergeMethod() {
+        return mergeMethod;
+    }
+
+    public void setMergeMethod(String mergeMethod) {
+        this.mergeMethod = mergeMethod;
     }
 
     @Override
@@ -79,7 +118,7 @@ public class UpdatePullRequests extends CommandSupport {
                 if (GitHubHelpers.hasLabel(getLabels(pullRequest), configuration.getGithubPullRequestLabel())) {
                     context.setPullRequest(pullRequest);
 
-                    if (!GitHubHelpers.isMergeable(pullRequest)) {
+                    if (!GitHubHelpers.isMergeable(pullRequest) && checkPrStatus) {
                         // lets re-run the update commands we can find on the PR
                         CompositeCommand commands = loadCommandsFromPullRequest(context, ghRepository, pullRequest);
                         if (commands != null) {
@@ -87,18 +126,29 @@ public class UpdatePullRequests extends CommandSupport {
                         }
                     }
 
-                    if (mergeOnSuccess) {
+                    if (mergeOnSuccess && checkPrStatus) {
                         try {
                             GHCommitStatus status = getLastCommitStatus(ghRepository, pullRequest);
                             if (status != null) {
                                 GHCommitState state = status.getState();
                                 if (state != null && state.equals(GHCommitState.SUCCESS)) {
                                     String message = Markdown.UPDATEBOT_ICON + " merging this pull request as its CI was successful";
-                                    pullRequest.merge(message);
+                                    mergePr(pullRequest, message);
+
                                 }
                             }
                         } catch (IOException e) {
                             context.warn(LOG, "Failed to find last commit status for PR " + pullRequest.getHtmlUrl() + " " + e, e);
+                        }
+                    }
+
+                    //if pr status checks are skipped then just attempt to merge
+                    if (!checkPrStatus) {
+                        try {
+                            String message = Markdown.UPDATEBOT_ICON + " merging this pull request - checks on PR status were skipped";
+                            mergePr(pullRequest,message);
+                        } catch (IOException e) {
+                            context.warn(LOG, "Failed to merge PR " + pullRequest.getHtmlUrl() + " " + e, e);
                         }
                     }
                     if (isOpen(pullRequest)) {
@@ -107,7 +157,17 @@ public class UpdatePullRequests extends CommandSupport {
                 }
             }
         }
+        if(contextStatus == Status.COMPLETE && deleteMergedBranches){
+            GitHubHelpers.deleteUpdateBotBranches(ghRepository);
+        }
         context.setStatus(contextStatus);
+    }
+
+    public void mergePr(GHPullRequest pullRequest, String message) throws IOException {
+        //match merge method to enum, case insensitive
+        GHPullRequest.MergeMethod gitMergeMethod = Arrays.stream(GHPullRequest.MergeMethod.values())
+                .filter(e -> e.name().equalsIgnoreCase(mergeMethod)).findAny().orElse(GHPullRequest.MergeMethod.MERGE);
+        pullRequest.merge(message,null,gitMergeMethod);
     }
 
     /**
