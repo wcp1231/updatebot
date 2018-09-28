@@ -108,7 +108,7 @@ public class Repositories {
                     if (organisation != null) {
                         String name = organisation.getName();
                         if (name != null) {
-                            addGitHubRepositories(map, github, organisation, new File(gitHubDir, name));
+                            addGitHubRepositories(configuration, map, github, organisation, new File(gitHubDir, name));
                         } else {
                             LOG.warn("Organisation has no name! " + organisation);
                         }
@@ -119,18 +119,22 @@ public class Repositories {
         List<GitRepository> gitRepositories = repositoryConfig.getGit();
         if (gitRepositories != null) {
             for (GitRepository gitRepository : gitRepositories) {
-                addRepository(map, gitDir, gitRepository);
+                addRepository(configuration, map, gitDir, gitRepository);
             }
         }
         return new ArrayList<>(map.values());
     }
 
-    protected static void addRepository(Map<String, LocalRepository> map, File gitDir, GitRepository gitRepository) {
+    protected static void addRepository(Configuration configuration, Map<String, LocalRepository> map, File gitDir, GitRepository gitRepository) {
+        if (configuration.isIgnoreExcludeUpdateLoopRepositories() && gitRepository.isExcludeUpdateLoop()) {
+            LOG.info("Ignoring repository " + gitRepository.getFullName() + " as it configured to be excluded from the update-loop");
+            return;
+        }
         LocalRepository localRepository = new LocalRepository(gitRepository, new File(gitDir, gitRepository.getName()));
         map.putIfAbsent(localRepository.getCloneUrl(), localRepository);
     }
 
-    protected static void addGitHubRepositories(Map<String, LocalRepository> map, GitHub github, GithubOrganisation organisation, File file) {
+    protected static void addGitHubRepositories(Configuration configuration, Map<String, LocalRepository> map, GitHub github, GithubOrganisation organisation, File file) {
         String orgName = organisation.getName();
         Filter<String> filter = organisation.createFilter();
 
@@ -152,7 +156,7 @@ public class Repositories {
                             }
                             if (ghRepository != null) {
                                 GitRepository gitRepository = new GithubRepository(ghRepository, namedRepository);
-                                addRepository(map, file, gitRepository);
+                                addRepository(configuration, map, file, gitRepository);
                             } else {
                                 LOG.warn("Github repository " + orgName + "/" + name + " not found!");
                             }
@@ -164,7 +168,7 @@ public class Repositories {
                     String repoName = entry.getKey();
                     if (filter.matches(repoName) && foundNames.add(repoName)) {
                         GitRepository gitRepository = new GithubRepository(entry.getValue());
-                        addRepository(map, file, gitRepository);
+                        addRepository(configuration, map, file, gitRepository);
                     }
                 }
             } catch (IOException e) {

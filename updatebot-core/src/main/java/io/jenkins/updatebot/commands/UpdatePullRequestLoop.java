@@ -19,6 +19,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import io.jenkins.updatebot.CommandNames;
 import io.jenkins.updatebot.Configuration;
+import io.jenkins.updatebot.model.GitHubProjects;
+import io.jenkins.updatebot.model.RepositoryConfig;
 import io.jenkins.updatebot.support.Systems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,8 @@ public class UpdatePullRequestLoop extends CommandSupport {
 
     @Override
     public ParentContext run(Configuration configuration) throws IOException {
+        configuration.setIgnoreExcludeUpdateLoopRepositories(true);
+
         validateConfiguration(configuration);
 
         ParentContext parentContext = new ParentContext();
@@ -120,6 +124,15 @@ public class UpdatePullRequestLoop extends CommandSupport {
     @Override
     public void run(CommandContext context) throws IOException {
         throw new IllegalArgumentException("This method should never be invoked!");
+    }
+
+    @Override
+    public RepositoryConfig getRepositoryConfig(Configuration configuration) throws IOException {
+        RepositoryConfig answer = super.getRepositoryConfig(configuration);
+
+        // lets filter out any repositories which are configured to be excluded from the update loop
+        return answer;
+
     }
 
     protected UpdatePullRequests createUpdatePullRequestsCommand() {
