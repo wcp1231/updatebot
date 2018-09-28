@@ -123,14 +123,30 @@ public class GitHubHelpers {
         if (ghRepository != null) {
             Map<String, GHBranch> branches = ghRepository.getBranches();
             for (GHBranch ghBranch : branches.values()) {
-                String name = ghBranch.getName();
-                if (name.startsWith("updatebot-")) {
-                    //delete as per https://github.com/kohsuke/github-api/pull/164#issuecomment-78391771
-                    //heads needed as per https://developer.github.com/v3/git/refs/#get-a-reference
-                    ghRepository.getRef("heads/"+ghBranch.getName()).delete();
-                }
+                deleteUpdateBotBranch(ghRepository, ghBranch);
             }
         }
+    }
+
+    public static void deleteUpdateBotBranches(GHRepository ghRepository, List<String> branchNames) throws IOException{
+        for(String branchName:branchNames){
+            deleteUpdateBotBranch(ghRepository,branchName);
+        }
+    }
+
+    public static void deleteUpdateBotBranch(GHRepository ghRepository, GHBranch ghBranch) throws IOException {
+        deleteUpdateBotBranch(ghRepository,ghBranch.getName());
+
+    }
+
+    public static void deleteUpdateBotBranch(GHRepository ghRepository, String branchName) throws IOException{
+        if (branchName.startsWith("updatebot-")) {
+            //delete as per https://github.com/kohsuke/github-api/pull/164#issuecomment-78391771
+            //heads needed as per https://developer.github.com/v3/git/refs/#get-a-reference
+            ghRepository.getRef("heads/"+branchName).delete();
+            LOG.info("deleted branch "+branchName+" for "+ghRepository.getFullName());
+        }
+
     }
 
     public static GHPerson getOrganisationOrUser(GitHub github, String orgName) {
