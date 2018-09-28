@@ -106,6 +106,7 @@ public class Configuration {
     private boolean ansiInitialised;
     private boolean useAnsi;
     private Map<String, UserPassword> gitCredentials = new HashMap<>();
+    private boolean ignoreExcludeUpdateLoopRepositories;
 
     public GitHub getGithub() throws IOException {
         if (github == null) {
@@ -427,5 +428,13 @@ public class Configuration {
 
     public void setGitCredentials(Map<String, UserPassword> gitCredentials) {
         this.gitCredentials = gitCredentials;
+    }
+
+    public boolean isIgnoreExcludeUpdateLoopRepositories() {
+        return ignoreExcludeUpdateLoopRepositories;
+    }
+
+    public void setIgnoreExcludeUpdateLoopRepositories(boolean ignoreExcludeUpdateLoopRepositories) {
+        this.ignoreExcludeUpdateLoopRepositories = ignoreExcludeUpdateLoopRepositories;
     }
 }

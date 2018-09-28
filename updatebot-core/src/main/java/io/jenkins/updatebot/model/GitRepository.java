@@ -26,6 +26,7 @@ public class GitRepository extends DtoSupport {
     private String cloneUrl;
     private String htmlUrl;
     private GitRepositoryConfig repositoryDetails;
+    private Boolean excludeUpdateLoop;
 
     public GitRepository() {
     }
@@ -46,6 +47,13 @@ public class GitRepository extends DtoSupport {
                 "name='" + name + '\'' +
                 ", cloneUrl='" + cloneUrl + '\'' +
                 '}';
+    }
+
+    /**
+     * Returns true if this repository should be excluded from the update loop
+     */
+    public boolean isExcludeUpdateLoop() {
+        return this.excludeUpdateLoop != null && this.excludeUpdateLoop.booleanValue();
     }
 
     public String getName() {
@@ -94,5 +102,13 @@ public class GitRepository extends DtoSupport {
      */
     public String secureCloneUrl(Configuration configuration) {
         return getCloneUrl();
+    }
+
+    public Boolean getExcludeUpdateLoop() {
+        return excludeUpdateLoop;
+    }
+
+    public void setExcludeUpdateLoop(Boolean excludeUpdateLoop) {
+        this.excludeUpdateLoop = excludeUpdateLoop;
     }
 }
