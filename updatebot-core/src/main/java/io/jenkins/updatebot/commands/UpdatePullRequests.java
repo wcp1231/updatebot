@@ -130,9 +130,10 @@ public class UpdatePullRequests extends CommandSupport {
                     if (mergeOnSuccess && checkPrStatus) {
                         try {
                             GHCommitStatus status = getLastCommitStatus(ghRepository, pullRequest);
+                            ghRepository.getLastCommitStatus(pullRequest.getHead().getSha());
                             if (status != null) {
                                 GHCommitState state = status.getState();
-                                if (state != null && state.equals(GHCommitState.SUCCESS)) {
+                                if (state != null && state.equals(GHCommitState.SUCCESS) && GitHubHelpers.checkCommitStatus(ghRepository,pullRequest,GHCommitState.SUCCESS)) {
                                     String message = Markdown.UPDATEBOT_ICON + " merging this pull request as its CI was successful";
                                     mergePr(pullRequest, message);
                                 }
