@@ -104,6 +104,7 @@ public class UpdatePullRequests extends CommandSupport {
     public void run(CommandContext context) throws IOException {
         Status contextStatus = Status.COMPLETE;
         GHRepository ghRepository = context.gitHubRepository();
+
         if (ghRepository != null) {
 
             // lets look for a pending issue
@@ -134,7 +135,6 @@ public class UpdatePullRequests extends CommandSupport {
                                 if (state != null && state.equals(GHCommitState.SUCCESS)) {
                                     String message = Markdown.UPDATEBOT_ICON + " merging this pull request as its CI was successful";
                                     mergePr(pullRequest, message);
-
                                 }
                             }
                         } catch (IOException e) {
@@ -157,9 +157,6 @@ public class UpdatePullRequests extends CommandSupport {
                 }
             }
         }
-        if(contextStatus == Status.COMPLETE && deleteMergedBranches){
-            GitHubHelpers.deleteUpdateBotBranches(ghRepository);
-        }
         context.setStatus(contextStatus);
     }
 
@@ -168,6 +165,10 @@ public class UpdatePullRequests extends CommandSupport {
         GHPullRequest.MergeMethod gitMergeMethod = Arrays.stream(GHPullRequest.MergeMethod.values())
                 .filter(e -> e.name().equalsIgnoreCase(mergeMethod)).findAny().orElse(GHPullRequest.MergeMethod.MERGE);
         pullRequest.merge(message,null,gitMergeMethod);
+
+        if(deleteMergedBranches){
+            GitHubHelpers.deleteUpdateBotBranch(pullRequest.getRepository(),pullRequest.getHead().getRef());
+        }
     }
 
     /**
