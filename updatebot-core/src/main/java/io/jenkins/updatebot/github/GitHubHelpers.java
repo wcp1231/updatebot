@@ -20,6 +20,7 @@ import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.fabric8.utils.Objects;
 import org.kohsuke.github.GHBranch;
+import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHLabel;
@@ -28,11 +29,13 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.HttpException;
+import org.kohsuke.github.PagedIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -163,6 +166,27 @@ public class GitHubHelpers {
             }
         }
         return person;
+    }
+
+    /**
+     * Make sure all the statuses reported on the commit match the expected, at least for first page
+     */
+    public static boolean checkCommitStatus(GHRepository repository, GHPullRequest pullRequest, GHCommitState expectedStatus) throws IOException {
+        boolean statusesMatch = true;
+        PagedIterable<GHCommitStatus> statuses = repository.getCommit(pullRequest.getHead().getSha()).listStatuses();
+
+        if(statuses!=null){
+            Iterator<GHCommitStatus> iterator = statuses.iterator();
+
+            while(iterator!=null && iterator.hasNext()){
+                GHCommitStatus status = iterator.next();
+                if(status == null || !status.getState().equals(expectedStatus)){
+                    statusesMatch = false;
+                }
+            }
+        }
+
+        return statusesMatch;
     }
 
     public static GHCommitStatus getLastCommitStatus(GHRepository repository, GHPullRequest pullRequest) throws IOException {
