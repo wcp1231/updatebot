@@ -15,10 +15,10 @@
  */
 package io.jenkins.updatebot.github;
 
+import io.fabric8.utils.Objects;
 import io.jenkins.updatebot.model.GitRepository;
 import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.repository.LocalRepository;
-import io.fabric8.utils.Objects;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -131,23 +132,23 @@ public class GitHubHelpers {
         }
     }
 
-    public static void deleteUpdateBotBranches(GHRepository ghRepository, List<String> branchNames) throws IOException{
-        for(String branchName:branchNames){
-            deleteUpdateBotBranch(ghRepository,branchName);
+    public static void deleteUpdateBotBranches(GHRepository ghRepository, List<String> branchNames) throws IOException {
+        for (String branchName : branchNames) {
+            deleteUpdateBotBranch(ghRepository, branchName);
         }
     }
 
     public static void deleteUpdateBotBranch(GHRepository ghRepository, GHBranch ghBranch) throws IOException {
-        deleteUpdateBotBranch(ghRepository,ghBranch.getName());
+        deleteUpdateBotBranch(ghRepository, ghBranch.getName());
 
     }
 
-    public static void deleteUpdateBotBranch(GHRepository ghRepository, String branchName) throws IOException{
+    public static void deleteUpdateBotBranch(GHRepository ghRepository, String branchName) throws IOException {
         if (branchName.startsWith("updatebot-")) {
             //delete as per https://github.com/kohsuke/github-api/pull/164#issuecomment-78391771
             //heads needed as per https://developer.github.com/v3/git/refs/#get-a-reference
-            ghRepository.getRef("heads/"+branchName).delete();
-            LOG.info("deleted branch "+branchName+" for "+ghRepository.getFullName());
+            ghRepository.getRef("heads/" + branchName).delete();
+            LOG.info("deleted branch " + branchName + " for " + ghRepository.getFullName());
         }
 
     }
@@ -175,18 +176,36 @@ public class GitHubHelpers {
         boolean statusesMatch = true;
         PagedIterable<GHCommitStatus> statuses = repository.getCommit(pullRequest.getHead().getSha()).listStatuses();
 
-        if(statuses!=null){
+        // note lets assume that the first status for a given target URL is the current value
+        // as we get a Success followed by a number of Pending statuses for a given URL
+        Map<String, GHCommitState> targetUrlToState = new HashMap<>();
+
+        int count = 0;
+        if (statuses != null) {
             Iterator<GHCommitStatus> iterator = statuses.iterator();
 
-            while(iterator!=null && iterator.hasNext()){
+            while (iterator != null && iterator.hasNext()) {
                 GHCommitStatus status = iterator.next();
-                if(status == null || !status.getState().equals(expectedStatus)){
+                GHCommitState state = status.getState();
+                String key = status.getTargetUrl();
+                if (key == null) {
+                    continue;
+                }
+                count++;
+                GHCommitState previous = targetUrlToState.get(key);
+                if (previous != null) {
+                    LOG.info("Ignoring subsequent state " + state + " for targetUrl " + key + " as we first got a state of " + previous);
+                    continue;
+                }
+                if (state != null) {
+                    targetUrlToState.put(key, state);
+                }
+                if (status == null || !state.equals(expectedStatus)) {
                     statusesMatch = false;
                 }
             }
         }
-
-        return statusesMatch;
+        return statusesMatch && count > 0;
     }
 
     public static GHCommitStatus getLastCommitStatus(GHRepository repository, GHPullRequest pullRequest) throws IOException {
