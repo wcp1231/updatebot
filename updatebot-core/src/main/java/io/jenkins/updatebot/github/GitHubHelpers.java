@@ -180,8 +180,12 @@ public class GitHubHelpers {
 
             while(iterator!=null && iterator.hasNext()){
                 GHCommitStatus status = iterator.next();
-                if(status == null || !status.getState().equals(expectedStatus)){
-                    statusesMatch = false;
+                GHCommitState state = status.getState();
+                if(status == null || !state.equals(expectedStatus) ){
+                    // lets ignore pending
+                    if (!status.equals(GHCommitState.PENDING)) {
+                        statusesMatch = false;
+                    }
                 }
             }
         }
