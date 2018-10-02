@@ -130,6 +130,7 @@ public class Repositories {
             LOG.info("Ignoring repository " + gitRepository.getFullName() + " as it configured to be excluded from the update-loop");
             return;
         }
+        LOG.info("repository " + gitRepository.getFullName() + " has excludeUpdateLoop: " + gitRepository.getExcludeUpdateLoop());
         LocalRepository localRepository = new LocalRepository(gitRepository, new File(gitDir, gitRepository.getName()));
         map.putIfAbsent(localRepository.getCloneUrl(), localRepository);
     }

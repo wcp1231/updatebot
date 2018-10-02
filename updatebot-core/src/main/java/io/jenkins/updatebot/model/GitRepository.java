@@ -15,6 +15,7 @@
  */
 package io.jenkins.updatebot.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.jenkins.updatebot.Configuration;
 import io.fabric8.utils.Objects;
 import io.fabric8.utils.Strings;
@@ -52,6 +53,7 @@ public class GitRepository extends DtoSupport {
     /**
      * Returns true if this repository should be excluded from the update loop
      */
+    @JsonIgnore
     public boolean isExcludeUpdateLoop() {
         return this.excludeUpdateLoop != null && this.excludeUpdateLoop.booleanValue();
     }
