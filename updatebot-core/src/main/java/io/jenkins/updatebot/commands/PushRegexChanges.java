@@ -46,6 +46,9 @@ public class PushRegexChanges extends ModifyFilesCommandSupport {
     @Parameter(order = 2, names = {"--exclude", "-x"}, description = "The file patterns to exclude")
     private List<String> excludeFiles;
 
+    @Parameter(order = 3, names = {"--previous-line"}, description = "The previous line pattern")
+    private String previousLinePattern;
+
     @Parameter(description = "The file patterns to replace", required = true)
     private List<String> files;
 
@@ -66,6 +69,10 @@ public class PushRegexChanges extends ModifyFilesCommandSupport {
 
     public List<String> getExcludeFiles() {
         return excludeFiles;
+    }
+
+    public String getPreviousLinePattern() {
+        return previousLinePattern;
     }
 
     @Override
