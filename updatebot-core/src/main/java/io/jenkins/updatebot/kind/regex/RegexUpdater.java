@@ -17,6 +17,7 @@ package io.jenkins.updatebot.kind.regex;
 
 import io.fabric8.utils.Files;
 import io.fabric8.utils.IOHelpers;
+import io.fabric8.utils.Strings;
 import io.jenkins.updatebot.commands.CommandContext;
 import io.jenkins.updatebot.commands.PushRegexChanges;
 import io.jenkins.updatebot.kind.UpdaterSupport;
@@ -78,6 +79,10 @@ public class RegexUpdater extends UpdaterSupport {
 
     protected boolean doPushRegex(PushRegexChanges command, CommandContext context, File file) throws IOException {
         boolean answer = false;
+        Pattern previousLinePattern = null;
+        if (Strings.isNotBlank(command.getPreviousLinePattern())) {
+            previousLinePattern = Pattern.compile(command.getPreviousLinePattern());
+        }
         if (Files.isFile(file)) {
             String text = IOHelpers.readFully(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
             String[] lines = text.split("\n");
@@ -88,7 +93,7 @@ public class RegexUpdater extends UpdaterSupport {
             for (int i = 0, size = lines.length; i < size; i++) {
                 String line = lines[i];
                 Matcher m = pattern.matcher(line);
-                if (m.matches()) {
+                if (m.matches() && (previousLinePattern == null || (i > 0 && previousLinePattern.matcher(lines[i-1]).matches()))) {
                     int start = m.start(1);
                     int end = m.end(1);
                     String newLine = line.substring(0, start) + value + line.substring(end);
