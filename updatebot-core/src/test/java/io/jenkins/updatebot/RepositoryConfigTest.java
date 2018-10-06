@@ -72,4 +72,25 @@ public class RepositoryConfigTest {
         assertThat(repositoryConfig.getGithub().findOrganisation("jstrachan-testing").findRepository("updatebot").getBranch()).isNull();
     }
 
+    @Test
+    public void testUseSinglePullRequestConfigurations() throws Exception {
+        // given
+        String configFile = new File(Tests.getBasedir(), "src/test/resources/maven/source/updatebot.yml").getPath();
+        testSubject.setConfigFile(configFile);
+
+        // when
+        RepositoryConfig repositoryConfig = pushSourceChanges.getRepositoryConfig(testSubject);
+
+        // then
+        assertThat(repositoryConfig.getGithub().findOrganisation("jstrachan-testing")
+                   .findRepository("fabric8")
+                   .isUseSinglePullRequest()
+                  ).isFalse();
+
+        assertThat(repositoryConfig.getGithub().findOrganisation("jstrachan-testing")
+                   .findRepository("fabric8-maven-plugin")
+                   .isUseSinglePullRequest()
+                  ).isTrue();
+
+    }
 }

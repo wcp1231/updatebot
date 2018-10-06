@@ -23,6 +23,7 @@ import io.jenkins.updatebot.support.Strings;
 public class GitRepositoryConfig extends DtoSupport {
     private String name;
     private String branch; // need to resolve branch name at runtime
+    private boolean useSinglePullRequest; // use single pull request to push commits from upstream
     private Dependencies push;
     private Dependencies pull;
 
@@ -38,10 +39,11 @@ public class GitRepositoryConfig extends DtoSupport {
         String nameText = Strings.notEmpty(name) ? "name='" + name + '\'' : "";
         String pushText = push != null ? "push=" + push : "";
         String pullText = pull != null ? "pull=" + pull : "";
-        String branchText = pull != null ? "branch=" + branch : "";
+        String branchText = branch != null ? "branch=" + branch : "";
+        String singlePullRequestText = "useSinglePullRequest=" + useSinglePullRequest;
 
         return "GitRepositoryConfig{" +
-                Strings.joinNotEmpty(", ", nameText, pushText, pullText, branchText) + '}';
+                Strings.joinNotEmpty(", ", nameText, pushText, pullText, branchText, singlePullRequestText) + '}';
     }
 
     public String getName() {
@@ -74,6 +76,14 @@ public class GitRepositoryConfig extends DtoSupport {
 
     public void setBranch(String branch) {
         this.branch = branch;
+    }
+
+    public boolean isUseSinglePullRequest() {
+        return this.useSinglePullRequest;
+    }
+
+    public void setUseSinglePullRequest(boolean single) {
+        this.useSinglePullRequest = single;
     }
 
 }

@@ -18,18 +18,21 @@ package io.jenkins.updatebot.support;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import io.fabric8.utils.Files;
 import io.fabric8.utils.IOHelpers;
 
-import javax.tools.FileObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
+
+import javax.tools.FileObject;
 
 /**
  */
@@ -40,6 +43,7 @@ public class MarkupHelper {
     public static ObjectMapper createYamlObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true); // support mapping into case sensitive Java class attribute names
         return objectMapper;
     }
 
