@@ -226,4 +226,16 @@ public class LocalRepository {
         }
         return config.getBranch();
     }
+
+    /**
+     * Returns true if the repository is configured to use single pull request to add a new version push commit
+     */
+    public boolean isUseSinglePullRequest() {
+        GitRepositoryConfig config = repo.getRepositoryDetails();
+        if (config == null) {
+            return false;
+        }
+
+        return config.isUseSinglePullRequest();
+    }
 }

@@ -74,7 +74,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
         Configuration configuration = context.getConfiguration();
 
         // Always resolve remote branch at runtime for PRs
-        String branch = context.getRepository().resolveRemoteBranch();
+        String branch = resolveRemoteBranch(context);
 
         dir.getParentFile().mkdirs();
 
@@ -100,7 +100,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
     protected void processPullRequest(CommandContext context, GHRepository ghRepository, GHPullRequest pullRequest) throws IOException {
         Configuration configuration = context.getConfiguration();
-        String title = context.createPullRequestTitle();
+        String title = resolvePullRequestTitle(context);
 
         File dir = context.getDir();
 /*
@@ -136,34 +136,42 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
             addIssueClosedCommentIfRequired(context, pullRequest, true);
             pullRequest.setLabels(configuration.getGithubPullRequestLabel());
         } else {
+            GHCommitPointer head = pullRequest.getHead();
+            String remoteRef = head.getRef();
+            String localBranch = remoteRef;
+
             context.setPullRequest(pullRequest);
 
             addIssueClosedCommentIfRequired(context, pullRequest, false);
-            String oldTitle = pullRequest.getTitle();
-            if (Objects.equal(oldTitle, title)) {
-                // lets check if we need to rebase
-                if (configuration.isRebaseMode()) {
-                    if (GitHubHelpers.isMergeable(pullRequest)) {
-                        return;
-                    }
-                    pullRequest.comment("[UpdateBot](https://github.com/jenkins-x/updatebot) rebasing due to merge conflicts");
-                }
-            } else {
-                //pullRequest.comment("Replacing previous commit");
-                pullRequest.setTitle(title);
 
+            // Let's see if we need to add commits into existing pull request branch
+            if(isUseSinglePullRequest(context)) {
                 pullRequest.comment(commandComment);
+
+                // lets add commit to existing pull request branch
+                doCommit(context, dir);
+            } else {
+                String oldTitle = pullRequest.getTitle();
+                if (Objects.equal(oldTitle, title)) {
+                    // lets check if we need to rebase
+                    if (configuration.isRebaseMode()) {
+                        if (GitHubHelpers.isMergeable(pullRequest)) {
+                            return;
+                        }
+                        pullRequest.comment("[UpdateBot](https://github.com/jenkins-x/updatebot) rebasing due to merge conflicts");
+                    }
+                } else {
+                    //pullRequest.comment("Replacing previous commit");
+                    pullRequest.setTitle(title);
+
+                    pullRequest.comment(commandComment);
+                }
+
+                // lets remove any local branches of this name
+                context.getGit().deleteBranch(dir, localBranch);
+
+                doCommit(context, dir, localBranch);
             }
-
-            GHCommitPointer head = pullRequest.getHead();
-            String remoteRef = head.getRef();
-
-            String localBranch = remoteRef;
-
-            // lets remove any local branches of this name
-            context.getGit().deleteBranch(dir, localBranch);
-
-            doCommit(context, dir, localBranch);
 
             if (!context.getGit().push(dir, localBranch + ":" + remoteRef)) {
                 context.warn(LOG, "Failed to push branch " + localBranch + " to existing github branch " + remoteRef + " for " + pullRequest.getHtmlUrl());
@@ -176,6 +184,22 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
         LocalRepository repository = LocalRepository.findRepository(getLocalRepositories(configuration), ghRepository);
 
         return repository.getRemoteBranch();
+    }
+
+
+    public boolean isUseSinglePullRequest(CommandContext context)  {
+        Configuration configuration = context.getConfiguration();
+        GHRepository ghRepository = context.gitHubRepository();
+
+        try {
+            List<LocalRepository> list = getLocalRepositories(configuration);
+            LocalRepository repository = LocalRepository.findRepository(list, ghRepository);
+
+            return repository.isUseSinglePullRequest();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void addIssueClosedCommentIfRequired(CommandContext context, GHPullRequest pullRequest, boolean create) {
@@ -210,10 +234,104 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     }
 
     /**
+     * Generate comment and commit any changes to current branch in the directory repository
+     *
+     * @param context command context
+     * @param dir repository directory
+     * @return result status
+     */
+    private boolean doCommit(CommandContext context, File dir) {
+        String commitComment = context.createCommit();
+        return context.getGit().addAndCommit(dir, commitComment);
+    }
+
+
+    /**
+     * Lets try find an existing pull request for previous PRs in GHRepository using context pull request prefix
+     *
+     * returns existing pull request or null if not found
+     * @throws IOException
+     */
+    protected GHPullRequest findOpenGHPullRequest(CommandContext context) throws IOException {
+        GHRepository ghRepository = context.gitHubRepository();
+        if(ghRepository != null) {
+            List<GHPullRequest> pullRequests = PullRequests.getOpenPullRequests(ghRepository, context.getConfiguration());
+
+            return findPullRequest(context, pullRequests);
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve remote repository branch at runtime
+     *
+     * @param context
+     * @return remote branch name
+     */
+    protected String resolveRemoteBranch(CommandContext context) {
+
+        // Let's try to find an existing pull request branch if we use single pull requests for repository
+        if(isUseSinglePullRequest(context)) {
+            try {
+                GHPullRequest pullRequest = findOpenGHPullRequest(context);
+                if (pullRequest != null )
+                    return pullRequest.getHead().getRef();
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return context.getRepository().resolveRemoteBranch();
+
+    }
+
+    /**
+     * Let's try to resolve pull request title from command context using repository configuration
+     *
+     * @param context
+     * @return pull request title
+     */
+    protected String resolvePullRequestTitle(CommandContext context) {
+        if(isUseSinglePullRequest(context))
+            return createSinglePullRequestTitle(context);
+        else
+            return context.createPullRequestTitle();
+    }
+
+    /**
+     * Let's try to resolve pull request title prefix from command context using repository configuration
+     *
+     * @param context
+     * @return pull request title
+     */
+    protected String resolvePullRequestTitlePrefix(CommandContext context) {
+        if(isUseSinglePullRequest(context))
+            return createSinglePullRequestTitle(context);
+        else
+            return context.createPullRequestTitlePrefix();
+    }
+
+    /**
+     * Create single pull request title
+     *
+     * @param context
+     * @return pull request title
+     */
+    protected String createSinglePullRequestTitle(CommandContext context) {
+        GHRepository ghRepository = context.gitHubRepository();
+
+        return "fix(versions): update " + ghRepository.getOwnerName() + "/" + ghRepository.getName() + " versions";
+    }
+
+    /**
      * Lets try find a pull request for previous PRs
+     * @throws IOException
      */
     protected GHPullRequest findPullRequest(CommandContext context, List<GHPullRequest> pullRequests) {
-        String prefix = context.createPullRequestTitlePrefix();
+        String prefix = resolvePullRequestTitlePrefix(context);
+
         if (pullRequests != null) {
             for (GHPullRequest pullRequest : pullRequests) {
                 String title = pullRequest.getTitle();

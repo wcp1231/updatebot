@@ -5,3 +5,5 @@ github:
     - name: kubernetes-client
     - name: fabric8
     - name: fabric8-maven-plugin
+      useSinglePullRequest: true
+
