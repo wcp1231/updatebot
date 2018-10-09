@@ -1,7 +1,5 @@
 pipeline {
-  agent {
-    label "jenkins-maven"
-  }
+  agent any
   stages {
     stage('CI Build') {
       when {
@@ -9,9 +7,7 @@ pipeline {
       }
       steps {
         checkout scm
-        container('maven') {
-          sh "mvn clean install"
-        }
+        sh "mvn clean install"
       }
     }
 
@@ -20,10 +16,8 @@ pipeline {
         branch 'master'
       }
       steps {
-        checkout scm
-        container('maven') {
-          sh './jx/scripts/release.sh'
-        }
+        git "https://github.com/jenkins-x/updatebot"
+        sh './jx/scripts/release.sh'
       }
     }
   }
