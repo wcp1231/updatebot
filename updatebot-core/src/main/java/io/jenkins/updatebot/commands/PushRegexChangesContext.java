@@ -46,8 +46,9 @@ public class PushRegexChangesContext extends CommandContext {
 
     @Override
     public String createPullRequestBody() {
-        return Markdown.UPDATEBOT_ICON + " pushed regex: `" + command.getRegex() + "` to: `" + command.getValue() + "`";
+        return Markdown.UPDATEBOT_ICON + " pushed regex: `" + command.getRegex() + "` to: `" + command.getValue() + "`" + createPullRequestBodyCommands();
     }
+
 
     @Override
     public String createCommit() {
