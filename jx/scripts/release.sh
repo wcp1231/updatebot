@@ -16,6 +16,9 @@ chmod 700 ~/.gnupg
 jx step gpg credentials -o ~/.gnupg
 chmod 600 ~/.gnupg/*
 
+export GPG_TTY=$(tty)
+echo "GPG_TTY is ${GPG_TTY}"
+
 export VERSION="$(jx-release-version)"
 echo "Setting the maven version to ${VERSION}"
 
