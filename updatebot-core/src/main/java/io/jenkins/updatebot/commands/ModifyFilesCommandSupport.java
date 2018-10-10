@@ -16,6 +16,7 @@
 package io.jenkins.updatebot.commands;
 
 import io.fabric8.utils.Objects;
+import io.fabric8.utils.Strings;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.github.GitHubHelpers;
 import io.jenkins.updatebot.github.Issues;
@@ -111,6 +112,10 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 */
 
         String commandComment = createPullRequestComment();
+        String prowComment = context.createPullRequestProwCommand();
+        if (Strings.isNotBlank(prowComment)) {
+            commandComment += "\n\n" + prowComment;
+        }
 
         if (pullRequest == null) {
             // Let's resolve Github remote branch from configuration

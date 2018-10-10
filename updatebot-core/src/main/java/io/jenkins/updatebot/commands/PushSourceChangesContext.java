@@ -49,7 +49,7 @@ public class PushSourceChangesContext extends CommandContext {
 
         return Markdown.UPDATEBOT_ICON + " pushed version changes from the source code in repository: " +
                 linkText +
-                " ref: `" + ref + "`\n" + createPullRequestBodyCommands();
+                " ref: `" + ref + "`\n";
     }
 
     @Override

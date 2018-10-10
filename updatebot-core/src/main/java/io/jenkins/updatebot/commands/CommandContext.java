@@ -188,7 +188,7 @@ public class CommandContext {
         if (child != null) {
             return child.createPullRequestBody();
         }
-        return Markdown.GENERATED_BY +  createPullRequestBodyCommands();
+        return Markdown.GENERATED_BY;
     }
 
     protected void addChild(CommandContext child) {
@@ -235,9 +235,9 @@ public class CommandContext {
 
 
     /**
-     * Creates a Prow command as part of a pull request
+     * Creates a Prow command as part of a pull request comment when its raised
      */
-    protected String createPullRequestBodyCommands() {
+    protected String createPullRequestProwCommand() {
         String prowCommand = getConfiguration().getProwPRCommand();
         if (Strings.isNotBlank(prowCommand)) {
             return "\n\n" + prowCommand;
