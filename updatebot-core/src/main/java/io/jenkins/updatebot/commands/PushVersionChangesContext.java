@@ -52,7 +52,7 @@ public class PushVersionChangesContext extends CommandContext {
 
     @Override
     public String createPullRequestBody() {
-        return Markdown.UPDATEBOT_ICON + " pushed " + step.getKind() + " dependency: `" + step.getDependency() + "` to: `" + step.getVersion() + "`" + createPullRequestBodyCommands();
+        return Markdown.UPDATEBOT_ICON + " pushed " + step.getKind() + " dependency: `" + step.getDependency() + "` to: `" + step.getVersion() + "`";
     }
 
     @Override
