@@ -15,6 +15,7 @@
  */
 package io.jenkins.updatebot.commands;
 
+import io.fabric8.utils.Strings;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.git.GitPlugin;
 import io.jenkins.updatebot.github.GitHubHelpers;
@@ -187,7 +188,7 @@ public class CommandContext {
         if (child != null) {
             return child.createPullRequestBody();
         }
-        return Markdown.GENERATED_BY;
+        return Markdown.GENERATED_BY +  createPullRequestBodyCommands();
     }
 
     protected void addChild(CommandContext child) {
@@ -230,6 +231,18 @@ public class CommandContext {
 
     public void error(Logger log, String message, Throwable e) {
         getConfiguration().error(log, message, e);
+    }
+
+
+    /**
+     * Creates a Prow command as part of a pull request
+     */
+    protected String createPullRequestBodyCommands() {
+        String prowCommand = getConfiguration().getProwPRCommand();
+        if (Strings.isNotBlank(prowCommand)) {
+            return "\n\n" + prowCommand;
+        }
+        return "";
     }
 
 }

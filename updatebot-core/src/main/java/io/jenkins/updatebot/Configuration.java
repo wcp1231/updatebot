@@ -93,6 +93,8 @@ public class Configuration {
     private String npmCommand = Systems.getConfigValue(EnvironmentVariables.NPM_COMMAND, "npm");
     @Parameter(names = {"--jenkinsfile-git-repo"}, description = "The git URL to clone for the Jenkinsfile library")
     private String jenksinsfileGitRepo = Systems.getConfigValue(EnvironmentVariables.JENKINSFILE_GIT_REPO, DEFAULT_JENKINSFILE_LIBRARY_GIT_URL);
+    @Parameter(names = {"--pr-command"}, description = "The Prow Pull Request command to append to Pull Request body content")
+    private String prowPRCommand = Systems.getConfigValue(EnvironmentVariables.PROW_PR_COMMAND, "/approve");
 
     private File sourceDir;
     private boolean rebaseMode = true;
@@ -327,6 +329,14 @@ public class Configuration {
 
     public void setNpmEnvironmentVariables(Map<String, String> npmEnvironmentVariables) {
         this.npmEnvironmentVariables = npmEnvironmentVariables;
+    }
+
+    public String getProwPRCommand() {
+        return prowPRCommand;
+    }
+
+    public void setProwPRCommand(String prowPRCommand) {
+        this.prowPRCommand = prowPRCommand;
     }
 
     public String getJenksinsfileGitRepo() {
