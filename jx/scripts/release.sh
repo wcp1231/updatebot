@@ -11,8 +11,10 @@ jx step git credentials
 # display the current namespace
 jx ns -b
 
-#jx step git credentials
-jx step gpg credentials
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+jx step gpg credentials -o ~/.gnupg
+chmod 600 ~/.gnupg/*
 
 export VERSION="$(jx-release-version)"
 echo "Setting the maven version to ${VERSION}"
