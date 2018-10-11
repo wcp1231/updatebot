@@ -62,6 +62,8 @@ public class RegexUpdater extends UpdaterSupport {
     }
 
     public boolean pushRegex(PushRegexChanges command, CommandContext context) throws IOException {
+        LOG.info("Using Previous Line regex: " + command.getPreviousLinePattern());
+
         List<String> excludeFiles = command.getExcludeFiles();
         if (excludeFiles == null) {
             excludeFiles = Collections.EMPTY_LIST;
@@ -80,8 +82,9 @@ public class RegexUpdater extends UpdaterSupport {
     protected boolean doPushRegex(PushRegexChanges command, CommandContext context, File file) throws IOException {
         boolean answer = false;
         Pattern previousLinePattern = null;
-        if (Strings.isNotBlank(command.getPreviousLinePattern())) {
-            previousLinePattern = Pattern.compile(command.getPreviousLinePattern());
+        String previousLinePatternText = command.getPreviousLinePattern();
+        if (Strings.isNotBlank(previousLinePatternText)) {
+            previousLinePattern = Pattern.compile(previousLinePatternText);
         }
         if (Files.isFile(file)) {
             String text = IOHelpers.readFully(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
