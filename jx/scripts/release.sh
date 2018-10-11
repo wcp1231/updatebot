@@ -20,7 +20,7 @@ chmod 600 ~/.gnupg/*
 echo "use-agent" >> ~/.gnupg/gpg.conf
 echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
 
-echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf" 
+echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf 
 
 export GPG_OPTS="--pinentry-mode loopback"
 #export GPG_TTY=/dev/tty
