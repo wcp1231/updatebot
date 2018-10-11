@@ -17,7 +17,6 @@ pipeline {
       }
       steps {
         git "https://github.com/jenkins-x/updatebot"
-        sh 'sleep 100000'
         sh './jx/scripts/release.sh'
       }
     }
