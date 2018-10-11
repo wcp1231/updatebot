@@ -94,7 +94,7 @@ public class Configuration {
     @Parameter(names = {"--jenkinsfile-git-repo"}, description = "The git URL to clone for the Jenkinsfile library")
     private String jenksinsfileGitRepo = Systems.getConfigValue(EnvironmentVariables.JENKINSFILE_GIT_REPO, DEFAULT_JENKINSFILE_LIBRARY_GIT_URL);
     @Parameter(names = {"--pr-command"}, description = "The Prow Pull Request command to append to Pull Request body content")
-    private String prowPRCommand = Systems.getConfigValue(EnvironmentVariables.PROW_PR_COMMAND, "/approve");
+    private String prowPRCommand = Systems.getConfigValue(EnvironmentVariables.PROW_PR_COMMAND, "/test this\n/approve");
 
     private File sourceDir;
     private boolean rebaseMode = true;
