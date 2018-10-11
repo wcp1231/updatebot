@@ -16,6 +16,7 @@ chmod 700 ~/.gnupg
 jx step gpg credentials -o ~/.gnupg
 chmod 600 ~/.gnupg/*
 
+export GPG_OPTS="--pinentry-mode loopback"
 export GPG_TTY=/dev/tty
 
 export VERSION="$(jx-release-version)"
