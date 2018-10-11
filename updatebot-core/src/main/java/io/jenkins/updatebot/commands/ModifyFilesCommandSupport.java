@@ -112,10 +112,6 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 */
 
         String commandComment = createPullRequestComment();
-        String prowComment = context.createPullRequestProwCommand();
-        if (Strings.isNotBlank(prowComment)) {
-            commandComment += "\n\n" + prowComment;
-        }
 
         if (pullRequest == null) {
             // Let's resolve Github remote branch from configuration
@@ -138,6 +134,12 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
             context.info(LOG, configuration.colored(Configuration.COLOR_PENDING, "Created pull request " + pullRequest.getHtmlUrl()));
 
             pullRequest.comment(commandComment);
+
+            String prowCommand = context.getConfiguration().getProwPRCommand();
+            if (Strings.isNotBlank(prowCommand)) {
+                pullRequest.comment(prowCommand);
+            }
+
             addIssueClosedCommentIfRequired(context, pullRequest, true);
             pullRequest.setLabels(configuration.getGithubPullRequestLabel());
         } else {

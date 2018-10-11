@@ -232,17 +232,4 @@ public class CommandContext {
     public void error(Logger log, String message, Throwable e) {
         getConfiguration().error(log, message, e);
     }
-
-
-    /**
-     * Creates a Prow command as part of a pull request comment when its raised
-     */
-    protected String createPullRequestProwCommand() {
-        String prowCommand = getConfiguration().getProwPRCommand();
-        if (Strings.isNotBlank(prowCommand)) {
-            return "\n\n" + prowCommand;
-        }
-        return "";
-    }
-
 }
