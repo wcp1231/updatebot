@@ -135,10 +135,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
             pullRequest.comment(commandComment);
 
-            String prowCommand = context.getConfiguration().getProwPRCommand();
-            if (Strings.isNotBlank(prowCommand)) {
-                pullRequest.comment(prowCommand);
-            }
+            addProwComment(context, pullRequest);
 
             addIssueClosedCommentIfRequired(context, pullRequest, true);
             pullRequest.setLabels(configuration.getGithubPullRequestLabel());
@@ -179,11 +176,19 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
                 doCommit(context, dir, localBranch);
             }
+            addProwComment(context, pullRequest);
 
             if (!context.getGit().push(dir, localBranch + ":" + remoteRef)) {
                 context.warn(LOG, "Failed to push branch " + localBranch + " to existing github branch " + remoteRef + " for " + pullRequest.getHtmlUrl());
             }
             context.info(LOG, "Updated PR " + pullRequest.getHtmlUrl());
+        }
+    }
+
+    protected void addProwComment(CommandContext context, GHPullRequest pullRequest) throws IOException {
+        String prowCommand = context.getConfiguration().getProwPRCommand();
+        if (Strings.isNotBlank(prowCommand)) {
+            pullRequest.comment(prowCommand);
         }
     }
 
