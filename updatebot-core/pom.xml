@@ -132,6 +132,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.plugin.version}</version>
         <configuration>
+          <forkMode>never</forkMode>
           <systemPropertyVariables>
             <basedir>${basedir}</basedir>
             <project.version>${project.version}</project.version>
