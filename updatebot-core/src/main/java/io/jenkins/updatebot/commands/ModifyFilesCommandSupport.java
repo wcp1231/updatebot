@@ -62,7 +62,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
     public void run(CommandContext context, GHRepository ghRepository, GHPullRequest pullRequest) throws IOException {
         prepareDirectory(context);
-        if (doProcess(context)) {
+        if (doProcess(context) && !context.getConfiguration().isDryRun()) {
             processPullRequest(context, ghRepository, pullRequest);
         }
     }
