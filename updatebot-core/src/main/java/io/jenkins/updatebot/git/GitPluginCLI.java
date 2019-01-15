@@ -128,7 +128,7 @@ public class GitPluginCLI implements GitPlugin {
                 return true;
             }
         }
-        LOG.warn("Failed to checkout master in " + dir);
+        LOG.warn("Failed to checkout " + branch + " in " + dir);
         return false;
     }
 
