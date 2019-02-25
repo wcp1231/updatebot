@@ -357,10 +357,10 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
                     for(GitRepositoryConfig repo :org.getRepositories()){
                         if(pullRequest.getRepository().getName().equalsIgnoreCase(repo.getName())){
 
+
                             if (title != null && title.startsWith(prefix)) {
-                                //TODO: find base branch of PR
-                                //pullRequest.getBase() presumably isn't it as that's a commit pointer
-                                if(repo.getBranch() ==null || repo.getBranch().equalsIgnoreCase("FIXME!")) {
+
+                                if(repo.getBranch() ==null || repo.getBranch().equalsIgnoreCase(pullRequest.getBase().getRef())) {
                                     return pullRequest;
                                 }
                             }
