@@ -377,7 +377,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     protected String createSinglePullRequestTitle(CommandContext context) {
         String baseBranch = resolveBaseBranch(context); 
 
-        return createSinglePullRequestPrefix(context) + " to base ref " + baseBranch; 
+        return createSinglePullRequestPrefix(context) + " into " + baseBranch; 
     }
     
     /**
