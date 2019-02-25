@@ -26,6 +26,9 @@ import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.kind.KindDependenciesCheck;
 import io.jenkins.updatebot.kind.Updater;
 import io.jenkins.updatebot.model.DependencyVersionChange;
+import io.jenkins.updatebot.model.GitRepositoryConfig;
+import io.jenkins.updatebot.model.GithubOrganisation;
+import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.FileHelper;
 
@@ -40,9 +43,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -341,15 +346,31 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      * Lets try find a pull request for previous PRs
      * @throws IOException
      */
-    protected GHPullRequest findPullRequest(CommandContext context, List<GHPullRequest> pullRequests) {
+    protected GHPullRequest findPullRequest(CommandContext context, List<GHPullRequest> pullRequests) throws IOException {
         String prefix = resolvePullRequestTitlePrefix(context);
 
         if (pullRequests != null) {
             for (GHPullRequest pullRequest : pullRequests) {
                 String title = pullRequest.getTitle();
-                if (title != null && title.startsWith(prefix)) {
-                    return pullRequest;
+
+                for(GithubOrganisation org: context.getConfiguration().loadRepositoryConfig().getGithub().getOrganisations()){
+                    for(GitRepositoryConfig repo :org.getRepositories()){
+                        if(pullRequest.getRepository().getName().equalsIgnoreCase(repo.getName())){
+
+                            if (title != null && title.startsWith(prefix)) {
+                                //TODO: find base branch of PR
+                                //pullRequest.getBase() presumably isn't it as that's a commit pointer
+                                if(repo.getBranch() ==null || repo.getBranch().equalsIgnoreCase("FIXME!")) {
+                                    return pullRequest;
+                                }
+                            }
+                        }
+
+                    }
                 }
+
+
+
             }
         }
         return null;
