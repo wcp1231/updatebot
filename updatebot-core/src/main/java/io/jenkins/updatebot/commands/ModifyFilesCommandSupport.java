@@ -305,6 +305,31 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     }
 
     /**
+     * Resolve remote repository base branch at runtime
+     *
+     * @param context
+     * @return remote branch name
+     */
+    protected String resolveBaseBranch(CommandContext context) {
+
+        // Let's try to find an existing pull request base branch if we use single pull request mode
+        if(isUseSinglePullRequest(context)) {
+            try {
+                GHPullRequest pullRequest = findOpenGHPullRequest(context);
+                if (pullRequest != null )
+                    return pullRequest.getBase().getRef();
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // fallback to resolve base branch from configuration
+        return context.getRepository().resolveRemoteBranch();
+
+    }    
+    
+    /**
      * Let's try to resolve pull request title from command context using repository configuration
      *
      * @param context
@@ -325,23 +350,36 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      */
     protected String resolvePullRequestTitlePrefix(CommandContext context) {
         if(isUseSinglePullRequest(context))
-            return createSinglePullRequestTitle(context);
+            return createSinglePullRequestPrefix(context);
         else
             return context.createPullRequestTitlePrefix();
     }
 
     /**
-     * Create single pull request title
+     * Create single pull request prefix 
      *
      * @param context
      * @return pull request title
      */
-    protected String createSinglePullRequestTitle(CommandContext context) {
+    protected String createSinglePullRequestPrefix(CommandContext context) {
         GHRepository ghRepository = context.gitHubRepository();
 
         return "fix(versions): update " + ghRepository.getOwnerName() + "/" + ghRepository.getName() + " versions";
     }
 
+    /**
+     * Create single pull request title that includes base branch ref in order 
+     * to distinguish between many single pull requests from different base branches
+     *
+     * @param context
+     * @return pull request title
+     */
+    protected String createSinglePullRequestTitle(CommandContext context) {
+        String baseBranch = resolveBaseBranch(context); 
+
+        return createSinglePullRequestPrefix(context) + " to base ref " + baseBranch; 
+    }
+    
     /**
      * Lets try find a pull request for previous PRs
      * @throws IOException
