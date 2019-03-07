@@ -135,10 +135,19 @@ public abstract class CommandSupport {
     protected void discoverGitCredentials(Configuration configuration) {
         Map<String,UserPassword> credentials = configuration.getGitCredentials();
         String home = System.getProperty("user.home", ".");
+        configuration.info(LOG, "Looking for .git-credentials in " + home);
         File gitCredentials = new File(home, ".git-credentials");
         GitHelper.loadGitCredentials(credentials, gitCredentials);
         if (credentials.isEmpty()) {
+            home = System.getenv("HOME");
+            configuration.info(LOG, "Looking for .git-credentials in " + home);
+            gitCredentials = new File(home, ".git-credentials");
+            GitHelper.loadGitCredentials(credentials, gitCredentials);
+        }
+
+        if (credentials.isEmpty()) {
             String configHome = System.getenv("XDG_CONFIG_HOME");
+            configuration.info(LOG, "Looking for credentials in " + configHome);
             if (io.jenkins.updatebot.support.Strings.notEmpty(configHome)) {
                 GitHelper.loadGitCredentials(credentials, new File(configHome, "git/credentials"));
                 if (credentials.isEmpty()) {
