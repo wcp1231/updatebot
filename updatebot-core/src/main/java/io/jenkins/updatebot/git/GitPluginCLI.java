@@ -67,7 +67,7 @@ public class GitPluginCLI implements GitPlugin {
         String personName = null;
         try {
             GitHub github = configuration.getGithub();
-            if (github != null) {
+            if (github != null && !configuration.isDryRun()) {
                 GHMyself myself = github.getMyself();
                 if (myself != null) {
                     email = myself.getEmail();

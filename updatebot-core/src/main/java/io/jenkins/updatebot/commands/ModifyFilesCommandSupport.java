@@ -26,6 +26,9 @@ import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.kind.KindDependenciesCheck;
 import io.jenkins.updatebot.kind.Updater;
 import io.jenkins.updatebot.model.DependencyVersionChange;
+import io.jenkins.updatebot.model.GitRepositoryConfig;
+import io.jenkins.updatebot.model.GithubOrganisation;
+import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.FileHelper;
 
@@ -40,9 +43,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -62,7 +67,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
     public void run(CommandContext context, GHRepository ghRepository, GHPullRequest pullRequest) throws IOException {
         prepareDirectory(context);
-        if (doProcess(context)) {
+        if (doProcess(context) && !context.getConfiguration().isDryRun()) {
             processPullRequest(context, ghRepository, pullRequest);
         }
     }
@@ -300,6 +305,31 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     }
 
     /**
+     * Resolve remote repository base branch at runtime
+     *
+     * @param context
+     * @return remote branch name
+     */
+    protected String resolveBaseBranch(CommandContext context) {
+
+        // Let's try to find an existing pull request base branch if we use single pull request mode
+        if(isUseSinglePullRequest(context)) {
+            try {
+                GHPullRequest pullRequest = findOpenGHPullRequest(context);
+                if (pullRequest != null )
+                    return pullRequest.getBase().getRef();
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // fallback to resolve base branch from configuration
+        return context.getRepository().resolveRemoteBranch();
+
+    }    
+    
+    /**
      * Let's try to resolve pull request title from command context using repository configuration
      *
      * @param context
@@ -320,36 +350,65 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      */
     protected String resolvePullRequestTitlePrefix(CommandContext context) {
         if(isUseSinglePullRequest(context))
-            return createSinglePullRequestTitle(context);
+            return createSinglePullRequestPrefix(context);
         else
             return context.createPullRequestTitlePrefix();
     }
 
     /**
-     * Create single pull request title
+     * Create single pull request prefix 
      *
      * @param context
      * @return pull request title
      */
-    protected String createSinglePullRequestTitle(CommandContext context) {
+    protected String createSinglePullRequestPrefix(CommandContext context) {
         GHRepository ghRepository = context.gitHubRepository();
 
         return "fix(versions): update " + ghRepository.getOwnerName() + "/" + ghRepository.getName() + " versions";
     }
 
     /**
+     * Create single pull request title that includes base branch ref in order 
+     * to distinguish between many single pull requests from different base branches
+     *
+     * @param context
+     * @return pull request title
+     */
+    protected String createSinglePullRequestTitle(CommandContext context) {
+        String baseBranch = resolveBaseBranch(context); 
+
+        return createSinglePullRequestPrefix(context) + " into " + baseBranch; 
+    }
+    
+    /**
      * Lets try find a pull request for previous PRs
      * @throws IOException
      */
-    protected GHPullRequest findPullRequest(CommandContext context, List<GHPullRequest> pullRequests) {
+    protected GHPullRequest findPullRequest(CommandContext context, List<GHPullRequest> pullRequests) throws IOException {
         String prefix = resolvePullRequestTitlePrefix(context);
 
         if (pullRequests != null) {
             for (GHPullRequest pullRequest : pullRequests) {
                 String title = pullRequest.getTitle();
-                if (title != null && title.startsWith(prefix)) {
-                    return pullRequest;
+
+                for(GithubOrganisation org: context.getConfiguration().loadRepositoryConfig().getGithub().getOrganisations()){
+                    for(GitRepositoryConfig repo :org.getRepositories()){
+                        if(pullRequest.getRepository().getName().equalsIgnoreCase(repo.getName())){
+
+
+                            if (title != null && title.startsWith(prefix)) {
+
+                                if(repo.getBranch() ==null || repo.getBranch().equalsIgnoreCase(pullRequest.getBase().getRef())) {
+                                    return pullRequest;
+                                }
+                            }
+                        }
+
+                    }
                 }
+
+
+
             }
         }
         return null;
