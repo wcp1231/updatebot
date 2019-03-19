@@ -78,22 +78,32 @@ public class DockerUpdater extends UpdaterSupport {
         return answer;
     }
 
+    private boolean checkDirectory(File dir, PushVersionChangesContext context, String name, String value) throws IOException {
+        boolean answer = false;
+		File[] files = dir.listFiles();
+		for (File file : files) {
+			if (file.isDirectory()) {
+				boolean newAnswer = checkDirectory(file, context, name, value);
+                if (!answer) {
+					answer = newAnswer;
+				}
+			} else {
+                String fileName = file.getName();
+                if (Files.isFile(file) && fileName.equals("Dockerfile") || fileName.startsWith("Dockerfile.")) {
+                    if (updateDockerfile(context, file, name, value)) {
+                        answer = true;
+                    }
+                }
+			}
+		}
+        return answer;
+	}
 
     private boolean doPushVersionChange(PushVersionChangesContext context, String name, String value) throws IOException {
         boolean answer = false;
         File dir = context.getDir();
         if (Files.isDirectory(dir)) {
-            File[] files = dir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    String fileName = file.getName();
-                    if (Files.isFile(file) && fileName.equals("Dockerfile") || fileName.startsWith("Dockerfile.")) {
-                        if (updateDockerfile(context, file, name, value)) {
-                            answer = true;
-                        }
-                    }
-                }
-            }
+            answer = checkDirectory(dir, context, name, value);
         }
         return answer;
     }
