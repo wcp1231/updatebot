@@ -32,13 +32,13 @@ import java.util.List;
 /**
  * Push changes from a specific release pipeline into downstream projects
  */
-@Parameters(commandNames = CommandNames.PUSH_VERSION, commandDescription = "Pushes regex changes into your projects. " +
+@Parameters(commandNames = CommandNames.PUSH_REGEX, commandDescription = "Pushes regex changes into your projects. " +
         "You usually invoke this command after a release has been performed")
 public class PushRegexChanges extends ModifyFilesCommandSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(PushRegexChanges.class);
 
-    @Parameter(order = 0, names = {"--regex", "-r"}, description = "The regular expression to replace")
-    private String regex;
+    @Parameter(order = 0, names = {"--regex", "-r"}, description = "The regular expression to replace", variableArity=true)
+    private List<String> regex;
 
     @Parameter(order = 1, names = {"--value", "-v"}, description = "The value to replace the regex group with")
     private String value;
@@ -55,7 +55,7 @@ public class PushRegexChanges extends ModifyFilesCommandSupport {
     public PushRegexChanges() {
     }
 
-    public String getRegex() {
+    public List<String> getRegex() {
         return regex;
     }
 

@@ -27,16 +27,11 @@ import io.jenkins.updatebot.support.FileMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -70,26 +65,38 @@ public class RegexUpdater extends UpdaterSupport {
         }
         FileMatcher matcher = new FileMatcher(command.getFiles(), excludeFiles);
         List<File> files = matcher.matchFiles(context.getDir());
-        boolean answer = false;
-        for (File file : files) {
-            if (doPushRegex(command, context, file)) {
-                answer = true;
-            }
+        if (files.isEmpty()) {
+        	LOG.warn("Unable to match any files using '{}'", command.getFiles());
+        } else {
+        	LOG.info("Found {} matching file(s)", files.size());
         }
+        
+        boolean answer = false;
+        
+        for (File file : files) {
+        	LOG.info("Updating {}", file);
+        	for (String regex : command.getRegex()) {
+        		if (doPushRegex(command, context, file, regex)) {
+        			answer = true;
+        		}
+        	}
+        }
+        
         return answer;
     }
 
-    protected boolean doPushRegex(PushRegexChanges command, CommandContext context, File file) throws IOException {
-        boolean answer = false;
+    protected boolean doPushRegex(PushRegexChanges command, CommandContext context, File file, String regex) throws IOException {
+    	LOG.info("doPushRegex {}", regex);
+    	boolean answer = false;
         Pattern previousLinePattern = null;
         String previousLinePatternText = command.getPreviousLinePattern();
         if (Strings.isNotBlank(previousLinePatternText)) {
             previousLinePattern = Pattern.compile(previousLinePatternText);
         }
+        
         if (Files.isFile(file)) {
             String text = IOHelpers.readFully(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
             String[] lines = text.split("\n");
-            String regex = command.getRegex();
             String value = command.getValue();
 
             Pattern pattern = Pattern.compile(regex);

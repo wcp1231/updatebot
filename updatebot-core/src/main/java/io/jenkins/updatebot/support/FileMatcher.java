@@ -27,6 +27,7 @@ import io.fabric8.utils.Files;
 /**
  */
 public class FileMatcher {
+	
     private final List<String> includes;
     private final List<String> excludes;
     private AntPathMatcher pathMatcher = new AntPathMatcher(File.pathSeparator);
@@ -66,7 +67,7 @@ public class FileMatcher {
     protected boolean matchesPatterns(String path, Iterable<String> patterns) {
         boolean matchesInclude = false;
         for (String include : patterns) {
-            if (pathMatcher.match(include, path)) {
+        	if (pathMatcher.match(include, path)) {
                 matchesInclude = true;
             }
         }
