@@ -80,24 +80,24 @@ public class DockerUpdater extends UpdaterSupport {
 
     private boolean checkDirectory(File dir, PushVersionChangesContext context, String name, String value) throws IOException {
         boolean answer = false;
-		File[] files = dir.listFiles();
-		for (File file : files) {
-			if (file.isDirectory()) {
-				boolean newAnswer = checkDirectory(file, context, name, value);
-                if (!answer) {
-					answer = newAnswer;
-				}
-			} else {
-                String fileName = file.getName();
-                if (Files.isFile(file) && fileName.equals("Dockerfile") || fileName.startsWith("Dockerfile.")) {
-                    if (updateDockerfile(context, file, name, value)) {
-                        answer = true;
-                    }
+        File[] files = dir.listFiles();
+        for (File file : files) {
+                if (file.isDirectory()) {
+                        boolean newAnswer = checkDirectory(file, context, name, value);
+                        if (!answer) {
+                                answer = newAnswer;
+                        }
+                } else {
+                        String fileName = file.getName();
+                        if (Files.isFile(file) && fileName.equals("Dockerfile") || fileName.startsWith("Dockerfile.")) {
+                                if (updateDockerfile(context, file, name, value)) {
+                                        answer = true;
+                                }
+                        }
                 }
-			}
-		}
+        }
         return answer;
-	}
+        }
 
     private boolean doPushVersionChange(PushVersionChangesContext context, String name, String value) throws IOException {
         boolean answer = false;
@@ -109,11 +109,19 @@ public class DockerUpdater extends UpdaterSupport {
     }
 
     private boolean updateDockerfile(PushVersionChangesContext context, File file, String name, String value) throws IOException {
+        List<String> lines = IOHelpers.readLines(file);
+        boolean answer = replaceDockerfileStatement(lines, name, value);
+        if (answer) {
+            IOHelpers.writeLines(file, lines);
+        }
+        return answer;
+    }
+    public static boolean replaceDockerfileStatement(List<String> lines, String name, String value) {
         String[] linePrefixes = {
                 "FROM " + name + ":",
-                "ENV " + name + " "
+                "ENV " + name + " ",
+                "ARG " + name + "="
         };
-        List<String> lines = IOHelpers.readLines(file);
         boolean answer = false;
         for (int i = 0, size = lines.size(); i < size; i++) {
             String line = lines.get(i);
@@ -126,9 +134,6 @@ public class DockerUpdater extends UpdaterSupport {
                     }
                 }
             }
-        }
-        if (answer) {
-            IOHelpers.writeLines(file, lines);
         }
         return answer;
     }
