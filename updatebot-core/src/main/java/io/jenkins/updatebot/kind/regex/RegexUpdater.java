@@ -66,28 +66,28 @@ public class RegexUpdater extends UpdaterSupport {
         FileMatcher matcher = new FileMatcher(command.getFiles(), excludeFiles);
         List<File> files = matcher.matchFiles(context.getDir());
         if (files.isEmpty()) {
-        	LOG.warn("Unable to match any files using '{}'", command.getFiles());
+            LOG.warn("Unable to match any files using '{}'", command.getFiles());
         } else {
-        	LOG.info("Found {} matching file(s)", files.size());
+            LOG.info("Found {} matching file(s)", files.size());
         }
         
         boolean answer = false;
         
         for (File file : files) {
-        	LOG.info("Updating {}", file);
-        	for (String regex : command.getRegex()) {
-        		if (doPushRegex(command, context, file, regex)) {
-        			answer = true;
-        		}
-        	}
+            LOG.info("Updating {}", file);
+            for (String regex : command.getRegex()) {
+                if (doPushRegex(command, context, file, regex)) {
+                    answer = true;
+                }
+            }
         }
         
         return answer;
     }
 
     protected boolean doPushRegex(PushRegexChanges command, CommandContext context, File file, String regex) throws IOException {
-    	LOG.info("doPushRegex {}", regex);
-    	boolean answer = false;
+        LOG.info("doPushRegex {}", regex);
+        boolean answer = false;
         Pattern previousLinePattern = null;
         String previousLinePatternText = command.getPreviousLinePattern();
         if (Strings.isNotBlank(previousLinePatternText)) {
