@@ -27,6 +27,7 @@ import io.fabric8.utils.Files;
 /**
  */
 public class FileMatcher {
+    
     private final List<String> includes;
     private final List<String> excludes;
     private AntPathMatcher pathMatcher = new AntPathMatcher(File.pathSeparator);
