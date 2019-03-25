@@ -19,6 +19,7 @@ import io.jenkins.updatebot.kind.brew.BrewUpdater;
 import io.jenkins.updatebot.kind.docker.DockerUpdater;
 import io.jenkins.updatebot.kind.file.FileUpdater;
 import io.jenkins.updatebot.kind.helm.HelmUpdater;
+import io.jenkins.updatebot.kind.jenkinsx.JenkinsXUpdater;
 import io.jenkins.updatebot.kind.make.MakeUpdater;
 import io.jenkins.updatebot.kind.maven.MavenUpdater;
 import io.jenkins.updatebot.kind.npm.PackageJsonUpdater;
@@ -35,6 +36,7 @@ public enum Kind {
     PLUGINS("plugins", new PluginsUpdater()),
     BREW("brew", new BrewUpdater()),
     DOCKER("docker", new DockerUpdater()),
+    JENKINSX("jenkinsx", new JenkinsXUpdater()),
     MAKE("make", new MakeUpdater()),
     REGEX("regex", new RegexUpdater());
 
