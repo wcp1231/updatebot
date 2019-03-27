@@ -29,7 +29,6 @@ import io.jenkins.updatebot.support.Strings;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static io.jenkins.updatebot.kind.helm.HelmFiles.CHART_YAML;

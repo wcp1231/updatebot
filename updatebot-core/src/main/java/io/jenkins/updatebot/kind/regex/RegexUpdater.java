@@ -15,18 +15,6 @@
  */
 package io.jenkins.updatebot.kind.regex;
 
-import io.fabric8.utils.Files;
-import io.fabric8.utils.IOHelpers;
-import io.fabric8.utils.Strings;
-import io.jenkins.updatebot.commands.CommandContext;
-import io.jenkins.updatebot.commands.PushRegexChanges;
-import io.jenkins.updatebot.kind.UpdaterSupport;
-import io.jenkins.updatebot.model.Dependencies;
-import io.jenkins.updatebot.model.DependencyVersionChange;
-import io.jenkins.updatebot.support.FileMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,6 +24,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.fabric8.utils.Files;
+import io.fabric8.utils.IOHelpers;
+import io.fabric8.utils.Strings;
+import io.jenkins.updatebot.commands.CommandContext;
+import io.jenkins.updatebot.commands.PushRegexChanges;
+import io.jenkins.updatebot.kind.UpdaterSupport;
+import io.jenkins.updatebot.model.Dependencies;
+import io.jenkins.updatebot.model.DependencyVersionChange;
+import io.jenkins.updatebot.support.FileMatcher;
 
 /**
  */
@@ -63,6 +64,9 @@ public class RegexUpdater extends UpdaterSupport {
         if (excludeFiles == null) {
             excludeFiles = Collections.EMPTY_LIST;
         }
+        
+        LOG.info("Checking for matches against files {}", command.getFiles());
+
         FileMatcher matcher = new FileMatcher(command.getFiles(), excludeFiles);
         List<File> files = matcher.matchFiles(context.getDir());
         if (files.isEmpty()) {
