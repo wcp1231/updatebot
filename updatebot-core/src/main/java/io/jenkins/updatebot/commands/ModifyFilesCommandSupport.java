@@ -28,7 +28,6 @@ import io.jenkins.updatebot.kind.Updater;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.jenkins.updatebot.model.GitRepositoryConfig;
 import io.jenkins.updatebot.model.GithubOrganisation;
-import io.jenkins.updatebot.model.GithubRepository;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.FileHelper;
 
@@ -43,11 +42,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**

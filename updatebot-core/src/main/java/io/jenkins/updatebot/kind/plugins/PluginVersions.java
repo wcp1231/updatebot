@@ -17,13 +17,8 @@ package io.jenkins.updatebot.kind.plugins;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.jenkins.updatebot.model.DtoSupport;
-import io.jenkins.updatebot.model.GitRepositoryConfig;
-import io.jenkins.updatebot.model.GithubOrganisation;
-import io.fabric8.utils.Objects;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

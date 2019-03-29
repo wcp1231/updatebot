@@ -20,8 +20,6 @@ import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.commands.PushVersionChanges;
 import io.jenkins.updatebot.github.GitHubHelpers;
 import io.jenkins.updatebot.kind.Kind;
-import io.jenkins.updatebot.model.GitRepositoryConfig;
-import io.jenkins.updatebot.model.RepositoryConfigs;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.fabric8.updatebot.test.Tests;
 import org.junit.Before;
@@ -32,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  */
