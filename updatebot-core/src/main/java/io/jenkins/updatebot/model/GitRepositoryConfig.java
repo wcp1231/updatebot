@@ -24,6 +24,7 @@ public class GitRepositoryConfig extends DtoSupport {
     private String name;
     private String branch; // need to resolve branch name at runtime
     private boolean useSinglePullRequest; // use single pull request to push commits from upstream
+    private Boolean excludeUpdateLoop;
     private Dependencies push;
     private Dependencies pull;
 
@@ -84,6 +85,14 @@ public class GitRepositoryConfig extends DtoSupport {
 
     public void setUseSinglePullRequest(boolean single) {
         this.useSinglePullRequest = single;
+    }
+
+    public Boolean getExcludeUpdateLoop() {
+        return excludeUpdateLoop;
+    }
+
+    public void setExcludeUpdateLoop(Boolean excludeUpdateLoop) {
+        this.excludeUpdateLoop = excludeUpdateLoop;
     }
 
 }

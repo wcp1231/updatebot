@@ -39,6 +39,9 @@ public class GithubRepository extends GitRepository {
     public GithubRepository(GHRepository ghRepository, GitRepositoryConfig details) {
         this(ghRepository);
         setRepositoryDetails(details);
+        if (details.getExcludeUpdateLoop() != null) {
+            setExcludeUpdateLoop(details.getExcludeUpdateLoop());
+        }
     }
 
     @Override
