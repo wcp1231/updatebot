@@ -11,6 +11,10 @@ public class PhabUser {
         this.email = email;
     }
 
+    public String getPhid() {
+        return phid;
+    }
+
     public String getUsername() {
         return username;
     }

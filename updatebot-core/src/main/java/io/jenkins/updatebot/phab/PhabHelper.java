@@ -5,16 +5,16 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.jenkins.updatebot.commands.CommandContext;
 import io.jenkins.updatebot.model.PhabRepository;
+import io.jenkins.updatebot.model.PhabRevision;
 import io.jenkins.updatebot.model.PhabUser;
 import io.jenkins.updatebot.support.ProcessHelper;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class PhabHelper {
     public static List<PhabRepository> repositorySearch(ConduitAPIClient client, String phabHost, List<String> tags) throws IOException {
@@ -47,7 +47,6 @@ public class PhabHelper {
     }
 
     public static String createRevision(ConduitAPIClient client, CommandContext context) throws IOException {
-        //ProcessHelper.runCommandAndLogOutput(context.getConfiguration(), LOG, context.getDir(), "");
         String output = ProcessHelper.runCommandCaptureOutput(context.getDir(),
                 "arc", "diff", "master", "--nolint", "--nounit",
                 "--verbatim", "--excuse", "autofix", "--conduit-token", client.getConduitToken());
@@ -56,6 +55,42 @@ public class PhabHelper {
             return matcher.group(1);
         }
         return "NULL";
+    }
+
+    public static Map<String, List<PhabRevision>> queryOpenRevisions(ConduitAPIClient client) throws IOException {
+        ObjectNode params = ConduitAPIClient.OBJECT_MAPPER.createObjectNode();
+        PhabUser me = whoami(client);
+        params.withArray("authors").add(me.getPhid());
+        params.put("status", "status-open");
+        JsonNode response = client.perform("differential.query", params);
+        List<PhabRevision> revisions = new ArrayList<>();
+        Iterator<JsonNode> revisionsIter = response.withArray("result").elements();
+        while (revisionsIter.hasNext()) {
+            JsonNode revision = revisionsIter.next();
+            String id = revision.get("id").asText();
+            String uri = revision.get("uri").asText();
+            String status = revision.get("status").asText();
+            String statusName = revision.get("statusName").asText();
+            String branch = revision.get("branch").asText();
+            String repositoryPHID = revision.get("repositoryPHID").asText();
+            revisions.add(new PhabRevision(id, uri, status, statusName, branch, repositoryPHID));
+        }
+        return revisions.stream()
+                .collect(Collectors.groupingBy(PhabRevision::getRepositoryPHID,
+                        HashMap::new, Collectors.toCollection(ArrayList::new)));
+    }
+
+    public static void closeRevision(ConduitAPIClient client, String id) throws IOException {
+        ObjectNode params = ConduitAPIClient.OBJECT_MAPPER.createObjectNode();
+        params.put("objectIdentifier", id);
+        params.withArray("transactions")
+                .addObject().put("type", "abandon");
+        client.perform("differential.revision.edit", params);
+    }
+
+    public static void landRevision(ConduitAPIClient client, CommandContext context) throws IOException {
+        String output = ProcessHelper.runCommandCaptureOutput(context.getDir(),
+                "arc", "land", "--conduit-token", client.getConduitToken());
     }
 
     private static int getNextRepositoryCursor(JsonNode response) {
@@ -68,9 +103,9 @@ public class PhabHelper {
 
     private static List<PhabRepository> parseRepositories(JsonNode response, String phabHost) {
         List<PhabRepository> repositories = new ArrayList<>();
-        Iterator<JsonNode> projects = response.with("result").withArray("data").elements();
-        while (projects.hasNext()) {
-            JsonNode project = projects.next();
+        Iterator<JsonNode> projectsIter = response.with("result").withArray("data").elements();
+        while (projectsIter.hasNext()) {
+            JsonNode project = projectsIter.next();
             String phid = project.get("phid").asText();
             String callsign = project.with("fields").get("callsign").asText();
             repositories.add(new PhabRepository(phid, callsign, phabHost));
