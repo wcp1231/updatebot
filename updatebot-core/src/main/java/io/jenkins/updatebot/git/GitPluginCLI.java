@@ -142,16 +142,22 @@ public class GitPluginCLI implements GitPlugin {
     @Override
     public boolean stashAndCheckoutBranch(File dir, String branch, boolean createNotExist) {
         if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "stash") == 0) {
-            if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", branch) == 0) {
-                return true;
-            } else if (createNotExist) {
-                LOG.warn("Failed to checkout " + branch + ". Try to create");
-                if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", "-b", branch) == 0) {
-                    return true;
-                }
-            }
+            return checkoutBranch(dir, branch, createNotExist);
         }
         LOG.warn("Failed to checkout and create " + branch + " in " + dir);
+        return false;
+    }
+
+    @Override
+    public boolean checkoutBranch(File dir, String branch, boolean createNotExist) {
+        if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", branch) == 0) {
+            return true;
+        } else if (createNotExist) {
+            LOG.warn("Failed to checkout " + branch + ". Try to create");
+            if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", "-b", branch) == 0) {
+                return true;
+            }
+        }
         return false;
     }
 

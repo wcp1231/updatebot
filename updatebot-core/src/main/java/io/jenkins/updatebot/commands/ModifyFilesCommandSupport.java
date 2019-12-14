@@ -50,6 +50,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     public void run(CommandContext context) throws IOException {
         prepareDirectory(context);
         if (doProcess(context) && !context.getConfiguration().isDryRun()) {
+            createWorkingBranch(context);
             gitCommitAndPullRequest(context);
         }
     }
@@ -57,6 +58,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     public void run(CommandContext context, GHRepository ghRepository, GHPullRequest pullRequest) throws IOException {
         prepareDirectory(context);
         if (doProcess(context) && !context.getConfiguration().isDryRun()) {
+            createWorkingBranch(context);
             processPullRequest(context, ghRepository, pullRequest);
         }
     }
@@ -66,20 +68,25 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     protected void prepareDirectory(CommandContext context) {
         LocalRepository localRepository = context.getRepository();
         File dir = localRepository.getDir();
-        Configuration configuration = context.getConfiguration();
-
-        // Always resolve remote branch at runtime for PRs
-        String branch = resolveWorkingBranch(context);
 
         dir.getParentFile().mkdirs();
 
-        configuration.info(LOG, "Checkout branch: " + branch + " from " + localRepository.getFullName() + " in " + FileHelper.getRelativePathToCurrentDir(dir));
-        context.getGit().stashAndCheckoutBranch(dir, branch, true);
+        context.getGit().stashAndCheckoutMaster(dir);
         context.getGit().updateSubmodule(dir);
     }
 
     protected boolean doProcess(CommandContext context) throws IOException {
         return false;
+    }
+
+    protected void createWorkingBranch(CommandContext context) {
+        // Always resolve remote branch at runtime for PRs
+        LocalRepository localRepository = context.getRepository();
+        Configuration configuration = context.getConfiguration();
+        File dir = localRepository.getDir();
+        String branch = resolveWorkingBranch(context);
+        configuration.info(LOG, "Checkout branch: " + branch + " from " + localRepository.getFullName() + " in " + FileHelper.getRelativePathToCurrentDir(dir));
+        context.getGit().checkoutBranch(dir, branch, true);
     }
 
     protected void gitCommitAndPullRequest(CommandContext context) throws IOException {
