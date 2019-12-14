@@ -32,7 +32,7 @@ public class EnvironmentVariables {
     public static final String MERGE = "UPDATEBOT_MERGE";
     public static final String CHECK_PR_STATUS = "UPDATEBOT_CHECK_PR_STATUS";
     public static final String DELETE_MERGED_BRANCHES = "UPDATEBOT_DELETE_MERGED_BRANCHES";
-    public static final String MERGE_METHOD="UPDATEBOT_MERGE_METHOD";
+    public static final String MERGE_METHOD = "UPDATEBOT_MERGE_METHOD";
 
     public static final String DRY_RUN = "UPDATEBOT_DRY_RUN";
 
@@ -42,4 +42,7 @@ public class EnvironmentVariables {
     public static final String PROW_PR_COMMAND = "UPDATEBOT_PROW_PR_COMMAND";
 
     public static final String JENKINSFILE_GIT_REPO = "UPDATEBOT_JENKINSFILE_GIT_REPO";
+
+    public static final String PHAB_HOST = "PHAB_HOST";
+    public static final String CONDUIT_TOKEN = "CONDUIT_TOKEN";
 }

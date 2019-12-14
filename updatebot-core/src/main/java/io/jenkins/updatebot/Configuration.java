@@ -22,6 +22,7 @@ import io.jenkins.updatebot.kind.npm.DefaultNpmDependencyTreeGenerator;
 import io.jenkins.updatebot.kind.npm.NpmDependencyTreeGenerator;
 import io.jenkins.updatebot.model.RepositoryConfig;
 import io.jenkins.updatebot.model.RepositoryConfigs;
+import io.jenkins.updatebot.phab.ConduitAPIClient;
 import io.jenkins.updatebot.support.Strings;
 import io.jenkins.updatebot.support.Systems;
 import io.jenkins.updatebot.support.UserPassword;
@@ -41,11 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.fusesource.jansi.Ansi.Color.BLUE;
-import static org.fusesource.jansi.Ansi.Color.GREEN;
-import static org.fusesource.jansi.Ansi.Color.MAGENTA;
-import static org.fusesource.jansi.Ansi.Color.RED;
-import static org.fusesource.jansi.Ansi.Color.YELLOW;
+import static org.fusesource.jansi.Ansi.Color.*;
 import static org.fusesource.jansi.Ansi.ansi;
 
 /**
@@ -86,6 +83,12 @@ public class Configuration {
     private boolean useHttpsTransport;
     @Parameter(names = {"--disable-ansi"}, description = "Whether to disable the use of ANSI colours in the output")
     private boolean disableAnsi;
+
+    @Parameter(names = {"--phab-host"}, description = "Phabricator host")
+    private String phabHost = Systems.getConfigValue(EnvironmentVariables.PHAB_HOST);
+    @Parameter(names = {"--conduit-token"}, description = "Phabricator conduit token")
+    private String conduitToken = Systems.getConfigValue(EnvironmentVariables.CONDUIT_TOKEN);
+    private ConduitAPIClient conduitClient;
 
     @Parameter(names = {"--mvn"}, description = "The location of the `mvn` executable for invoking maven")
     private String mvnCommand = Systems.getConfigValue(EnvironmentVariables.MVN_COMMAND, "mvn");
@@ -130,6 +133,13 @@ public class Configuration {
             this.github = ghb.build();
         }
         return this.github;
+    }
+
+    public ConduitAPIClient getConduitAPIClient() {
+        if (conduitClient == null && Strings.notEmpty(conduitToken)) {
+            conduitClient = new ConduitAPIClient(phabHost, conduitToken);
+        }
+        return conduitClient;
     }
 
     public String getConfigFile() {
@@ -345,6 +355,10 @@ public class Configuration {
 
     public void setJenksinsfileGitRepo(String jenksinsfileGitRepo) {
         this.jenksinsfileGitRepo = jenksinsfileGitRepo;
+    }
+
+    public String getPhabHost() {
+        return phabHost;
     }
 
     public void info(Logger log, String message) {
