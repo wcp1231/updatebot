@@ -62,6 +62,6 @@ public class PushRegexChangesContext extends CommandContext {
 
     @Override
     public String createPullRequestTitlePrefix() {
-        return "update " + command.getRegex() + " to ";
+        return "autofix: update " + command.getRegex() + " to ";
     }
 }

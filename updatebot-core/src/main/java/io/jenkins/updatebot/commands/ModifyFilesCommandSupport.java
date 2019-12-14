@@ -28,31 +28,23 @@ import io.jenkins.updatebot.kind.Updater;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.jenkins.updatebot.model.GitRepositoryConfig;
 import io.jenkins.updatebot.model.GithubOrganisation;
+import io.jenkins.updatebot.model.PhabRepository;
+import io.jenkins.updatebot.phab.PhabHelper;
 import io.jenkins.updatebot.repository.LocalRepository;
 import io.jenkins.updatebot.support.FileHelper;
-
-import org.kohsuke.github.GHCommitPointer;
-import org.kohsuke.github.GHIssue;
-import org.kohsuke.github.GHIssueComment;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Base class for all UpdateBot commands
  */
 public abstract class ModifyFilesCommandSupport extends CommandSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(ModifyFilesCommandSupport.class);
-    private GHIssue issue;
 
     @Override
     public void run(CommandContext context) throws IOException {
@@ -77,12 +69,13 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
         Configuration configuration = context.getConfiguration();
 
         // Always resolve remote branch at runtime for PRs
-        String branch = resolveRemoteBranch(context);
+        String branch = resolveWorkingBranch(context);
 
         dir.getParentFile().mkdirs();
 
         configuration.info(LOG, "Checkout branch: " + branch + " from " + localRepository.getFullName() + " in " + FileHelper.getRelativePathToCurrentDir(dir));
-        context.getGit().stashAndCheckoutBranch(dir, branch);
+        context.getGit().stashAndCheckoutBranch(dir, branch, true);
+        context.getGit().updateSubmodule(dir);
     }
 
     protected boolean doProcess(CommandContext context) throws IOException {
@@ -95,10 +88,16 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
             List<GHPullRequest> pullRequests = PullRequests.getOpenPullRequests(ghRepository, context.getConfiguration());
             GHPullRequest pullRequest = findPullRequest(context, pullRequests);
             processPullRequest(context, ghRepository, pullRequest);
-        } else {
-            // TODO what to do with vanilla git repos?
+            return;
         }
-
+        if (context.getRepository().getRepo() instanceof PhabRepository) {
+            File dir = context.getDir();
+            doCommit(context, dir);
+            String uri = PhabHelper.createRevision(context.getConfiguration().getConduitAPIClient(), context);
+            Configuration configuration = context.getConfiguration();
+            context.info(LOG, configuration.colored(Configuration.COLOR_COMPLETE, "Created Phabricator Revision: " + uri));
+        }
+        // TODO what to do with vanilla git repos?
     }
 
     protected void processPullRequest(CommandContext context, GHRepository ghRepository, GHPullRequest pullRequest) throws IOException {
@@ -151,7 +150,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
             addIssueClosedCommentIfRequired(context, pullRequest, false);
 
             // Let's see if we need to add commits into existing pull request branch
-            if(isUseSinglePullRequest(context)) {
+            if (isUseSinglePullRequest(context)) {
                 pullRequest.comment(commandComment);
 
                 // lets add commit to existing pull request branch
@@ -201,17 +200,20 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     }
 
 
-    public boolean isUseSinglePullRequest(CommandContext context)  {
+    public boolean isUseSinglePullRequest(CommandContext context) {
         Configuration configuration = context.getConfiguration();
         GHRepository ghRepository = context.gitHubRepository();
+
+        if (ghRepository == null) {
+            return false;
+        }
 
         try {
             List<LocalRepository> list = getLocalRepositories(configuration);
             LocalRepository repository = LocalRepository.findRepository(list, ghRepository);
 
             return repository.isUseSinglePullRequest();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -251,7 +253,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      * Generate comment and commit any changes to current branch in the directory repository
      *
      * @param context command context
-     * @param dir repository directory
+     * @param dir     repository directory
      * @return result status
      */
     private boolean doCommit(CommandContext context, File dir) {
@@ -262,13 +264,14 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
     /**
      * Lets try find an existing pull request for previous PRs in GHRepository using context pull request prefix
-     *
+     * <p>
      * returns existing pull request or null if not found
+     *
      * @throws IOException
      */
     protected GHPullRequest findOpenGHPullRequest(CommandContext context) throws IOException {
         GHRepository ghRepository = context.gitHubRepository();
-        if(ghRepository != null) {
+        if (ghRepository != null) {
             List<GHPullRequest> pullRequests = PullRequests.getOpenPullRequests(ghRepository, context.getConfiguration());
 
             return findPullRequest(context, pullRequests);
@@ -283,16 +286,19 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      * @param context
      * @return remote branch name
      */
-    protected String resolveRemoteBranch(CommandContext context) {
+    protected String resolveWorkingBranch(CommandContext context) {
+
+        if (context.getRepository().getRepo() instanceof PhabRepository) {
+            return resolvePhabricatorBranch(context);
+        }
 
         // Let's try to find an existing pull request branch if we use single pull requests for repository
-        if(isUseSinglePullRequest(context)) {
+        if (isUseSinglePullRequest(context)) {
             try {
                 GHPullRequest pullRequest = findOpenGHPullRequest(context);
-                if (pullRequest != null )
+                if (pullRequest != null)
                     return pullRequest.getHead().getRef();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -310,13 +316,12 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     protected String resolveBaseBranch(CommandContext context) {
 
         // Let's try to find an existing pull request base branch if we use single pull request mode
-        if(isUseSinglePullRequest(context)) {
+        if (isUseSinglePullRequest(context)) {
             try {
                 GHPullRequest pullRequest = findOpenGHPullRequest(context);
-                if (pullRequest != null )
+                if (pullRequest != null)
                     return pullRequest.getBase().getRef();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -324,8 +329,8 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
         // fallback to resolve base branch from configuration
         return context.getRepository().resolveRemoteBranch();
 
-    }    
-    
+    }
+
     /**
      * Let's try to resolve pull request title from command context using repository configuration
      *
@@ -333,7 +338,7 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      * @return pull request title
      */
     protected String resolvePullRequestTitle(CommandContext context) {
-        if(isUseSinglePullRequest(context))
+        if (isUseSinglePullRequest(context))
             return createSinglePullRequestTitle(context);
         else
             return context.createPullRequestTitle();
@@ -346,14 +351,19 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
      * @return pull request title
      */
     protected String resolvePullRequestTitlePrefix(CommandContext context) {
-        if(isUseSinglePullRequest(context))
+        if (isUseSinglePullRequest(context))
             return createSinglePullRequestPrefix(context);
         else
             return context.createPullRequestTitlePrefix();
     }
 
+    protected String resolvePhabricatorBranch(CommandContext context) {
+        // TODO formatted datetime
+        return "autofix/" + System.currentTimeMillis();
+    }
+
     /**
-     * Create single pull request prefix 
+     * Create single pull request prefix
      *
      * @param context
      * @return pull request title
@@ -361,24 +371,25 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
     protected String createSinglePullRequestPrefix(CommandContext context) {
         GHRepository ghRepository = context.gitHubRepository();
 
-        return "fix(versions): update " + ghRepository.getOwnerName() + "/" + ghRepository.getName() + " versions";
+        return "autofix(versions): update " + ghRepository.getOwnerName() + "/" + ghRepository.getName() + " versions";
     }
 
     /**
-     * Create single pull request title that includes base branch ref in order 
+     * Create single pull request title that includes base branch ref in order
      * to distinguish between many single pull requests from different base branches
      *
      * @param context
      * @return pull request title
      */
     protected String createSinglePullRequestTitle(CommandContext context) {
-        String baseBranch = resolveBaseBranch(context); 
+        String baseBranch = resolveBaseBranch(context);
 
-        return createSinglePullRequestPrefix(context) + " into " + baseBranch; 
+        return createSinglePullRequestPrefix(context) + " into " + baseBranch;
     }
-    
+
     /**
      * Lets try find a pull request for previous PRs
+     *
      * @throws IOException
      */
     protected GHPullRequest findPullRequest(CommandContext context, List<GHPullRequest> pullRequests) throws IOException {
@@ -388,14 +399,14 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
             for (GHPullRequest pullRequest : pullRequests) {
                 String title = pullRequest.getTitle();
 
-                for(GithubOrganisation org: context.getConfiguration().loadRepositoryConfig().getGithub().getOrganisations()){
-                    for(GitRepositoryConfig repo :org.getRepositories()){
-                        if(pullRequest.getRepository().getName().equalsIgnoreCase(repo.getName())){
+                for (GithubOrganisation org : context.getConfiguration().loadRepositoryConfig().getGithub().getOrganisations()) {
+                    for (GitRepositoryConfig repo : org.getRepositories()) {
+                        if (pullRequest.getRepository().getName().equalsIgnoreCase(repo.getName())) {
 
 
                             if (title != null && title.startsWith(prefix)) {
 
-                                if(repo.getBranch() ==null || repo.getBranch().equalsIgnoreCase(pullRequest.getBase().getRef())) {
+                                if (repo.getBranch() == null || repo.getBranch().equalsIgnoreCase(pullRequest.getBase().getRef())) {
                                     return pullRequest;
                                 }
                             }
@@ -403,7 +414,6 @@ public abstract class ModifyFilesCommandSupport extends CommandSupport {
 
                     }
                 }
-
 
 
             }

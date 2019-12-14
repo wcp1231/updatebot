@@ -15,7 +15,6 @@
  */
 package io.jenkins.updatebot.commands;
 
-import io.fabric8.utils.Strings;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.git.GitPlugin;
 import io.jenkins.updatebot.github.GitHubHelpers;

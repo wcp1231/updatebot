@@ -18,15 +18,11 @@ package io.jenkins.updatebot.repository;
 import io.fabric8.utils.Filter;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.github.GitHubHelpers;
-import io.jenkins.updatebot.model.GitHubProjects;
-import io.jenkins.updatebot.model.GitRepository;
-import io.jenkins.updatebot.model.GitRepositoryConfig;
-import io.jenkins.updatebot.model.GithubOrganisation;
-import io.jenkins.updatebot.model.GithubRepository;
-import io.jenkins.updatebot.model.RepositoryConfig;
+import io.jenkins.updatebot.model.*;
+import io.jenkins.updatebot.phab.ConduitAPIClient;
+import io.jenkins.updatebot.phab.PhabHelper;
 import io.jenkins.updatebot.support.FileHelper;
 import io.jenkins.updatebot.support.Strings;
-
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -35,12 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  */
@@ -88,10 +79,7 @@ public class Repositories {
         String workDirPath = configuration.getWorkDir();
         File workDir = new File(workDirPath);
         if (!workDir.isAbsolute()) {
-            File sourceDir = configuration.getSourceDir();
-            if (io.fabric8.utils.Files.isDirectory(sourceDir)) {
-                workDir = new File(sourceDir, workDirPath);
-            }
+            workDir = new File(workDir.getCanonicalPath());
         }
         workDir.mkdirs();
 
@@ -120,6 +108,16 @@ public class Repositories {
         if (gitRepositories != null) {
             for (GitRepository gitRepository : gitRepositories) {
                 addRepository(configuration, map, gitDir, gitRepository);
+            }
+        }
+        List<String> projectTags = repositoryConfig.getPhabTags();
+        if (projectTags != null) {
+            ConduitAPIClient client = configuration.getConduitAPIClient();
+            String phabHost = configuration.getPhabHost();
+            List<PhabRepository> repositories = PhabHelper.repositorySearch(client, phabHost, projectTags);
+            for (PhabRepository repository : repositories) {
+                LocalRepository localRepository = new LocalRepository(repository, new File(gitDir, repository.getName()));
+                map.putIfAbsent(localRepository.getCloneUrl(), localRepository);
             }
         }
         return new ArrayList<>(map.values());

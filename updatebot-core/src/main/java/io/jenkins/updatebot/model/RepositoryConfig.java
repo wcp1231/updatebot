@@ -27,6 +27,7 @@ public class RepositoryConfig {
     private List<GitRepository> git = new ArrayList<>();
     private GitRepositoryConfig local;
     private List<Environment> environments = new ArrayList();
+    private List<String> phabTags;
 
     @Override
     public String toString() {
@@ -76,6 +77,14 @@ public class RepositoryConfig {
 
     public void setEnvironments(List<Environment> environments) {
         this.environments = environments;
+    }
+
+    public List<String> getPhabTags() {
+        return phabTags;
+    }
+
+    public void setPhabTags(List<String> phabTags) {
+        this.phabTags = phabTags;
     }
 
     public GitRepositoryConfig getRepositoryDetails(String cloneUrl) {

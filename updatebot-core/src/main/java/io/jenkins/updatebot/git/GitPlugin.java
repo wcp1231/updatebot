@@ -59,5 +59,13 @@ public interface GitPlugin {
 
     boolean stashAndCheckoutBranch(File dir, String branch);
 
+    boolean stashAndCheckoutBranch(File dir, String branch, boolean createNotExist);
+
     void revertChanges(File dir) throws IOException;
+
+    String diff(File dir, String branch) throws IOException;
+
+    String currentBranch(File dir) throws IOException;
+
+    void updateSubmodule(File dir);
 }

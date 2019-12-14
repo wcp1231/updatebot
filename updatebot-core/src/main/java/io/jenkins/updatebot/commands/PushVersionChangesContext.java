@@ -57,7 +57,7 @@ public class PushVersionChangesContext extends CommandContext {
 
     @Override
     public String createCommit() {
-        return "fix(version): update " + step.getDependency() + " to " + step.getVersion();
+        return "autofix(version): update " + step.getDependency() + " to " + step.getVersion();
     }
 
     @Override
@@ -68,7 +68,7 @@ public class PushVersionChangesContext extends CommandContext {
     
     @Override
     public String createPullRequestTitlePrefix() {
-        return "update " + step.getDependency() + " to ";
+        return "autofix: update " + step.getDependency() + " to ";
     }
 
     public DependencyVersionChange getStep() {

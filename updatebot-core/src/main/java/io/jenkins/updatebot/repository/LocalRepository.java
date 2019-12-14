@@ -15,19 +15,12 @@
  */
 package io.jenkins.updatebot.repository;
 
-import static io.jenkins.updatebot.Configuration.DEFAULT_CONFIG_FILE;
-
 import io.fabric8.utils.Files;
 import io.fabric8.utils.Objects;
 import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.github.GitHubHelpers;
-import io.jenkins.updatebot.model.GitRepository;
-import io.jenkins.updatebot.model.GitRepositoryConfig;
-import io.jenkins.updatebot.model.GithubRepository;
-import io.jenkins.updatebot.model.RepositoryConfig;
-import io.jenkins.updatebot.model.RepositoryConfigs;
+import io.jenkins.updatebot.model.*;
 import io.jenkins.updatebot.support.Strings;
-
 import org.kohsuke.github.GHRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import static io.jenkins.updatebot.Configuration.DEFAULT_CONFIG_FILE;
 
 /**
  */
@@ -185,9 +180,8 @@ public class LocalRepository {
      * Resolves remote branch name at runtime using a combination of .updatebot.yml setting, or Github default branch,
      * or master as fallback. If branch is not set, tries to resolve default branch name from remote Github repository
      * in order to create PRs with updates using the same branch.
-     *
+     * <p>
      * Returns remote branch name to use
-     *
      */
     public String resolveRemoteBranch() {
         // Let's try use repository branch from .updatebot.yml first
@@ -196,10 +190,10 @@ public class LocalRepository {
             LOG.warn("The repo has no config!");
             return "master";
         }
-        if(!Strings.empty(config.getBranch())) {
+        if (!Strings.empty(config.getBranch())) {
             return config.getBranch();
         } // Try detect Github repository and use its default branch
-        else if(repo instanceof GithubRepository) {
+        else if (repo instanceof GithubRepository) {
             GHRepository ghRepository = GitHubHelpers.getGitHubRepository(this);
             if (ghRepository != null) {
                 config.setBranch(ghRepository.getDefaultBranch());
@@ -207,7 +201,7 @@ public class LocalRepository {
         }
 
         // Fallback to master branch for Git repositories
-        if(Strings.empty(config.getBranch())) {
+        if (Strings.empty(config.getBranch())) {
             config.setBranch("master");
         }
 

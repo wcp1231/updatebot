@@ -23,12 +23,15 @@ import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.model.DependencyVersionChange;
 import io.jenkins.updatebot.repository.LocalRepository;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -114,5 +117,11 @@ public class PushVersionChanges extends ModifyFilesCommandSupport {
         return new DependencyVersionChange(kind, propertyName, version);
     }
 
-
+    @Override
+    protected String resolvePhabricatorBranch(CommandContext context) {
+        List<String> copied = new ArrayList<>(values);
+        Collections.sort(copied);
+        String sha1 = DigestUtils.sha1Hex(String.join(" ", copied));
+        return "autofix/" + sha1.substring(0, 8);
+    }
 }

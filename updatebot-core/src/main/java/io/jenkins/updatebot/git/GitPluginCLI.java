@@ -16,6 +16,9 @@
 package io.jenkins.updatebot.git;
 
 import io.jenkins.updatebot.Configuration;
+import io.jenkins.updatebot.model.PhabUser;
+import io.jenkins.updatebot.phab.ConduitAPIClient;
+import io.jenkins.updatebot.phab.PhabHelper;
 import io.jenkins.updatebot.support.ProcessHelper;
 import io.jenkins.updatebot.support.Strings;
 import org.kohsuke.github.GHMyself;
@@ -27,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ *
  */
 public class GitPluginCLI implements GitPlugin {
     private static final transient Logger LOG = LoggerFactory.getLogger(GitPluginCLI.class);
@@ -66,15 +70,24 @@ public class GitPluginCLI implements GitPlugin {
         String email = null;
         String personName = null;
         try {
-            GitHub github = configuration.getGithub();
-            if (github != null && !configuration.isDryRun()) {
-                GHMyself myself = github.getMyself();
-                if (myself != null) {
-                    email = myself.getEmail();
-                    personName = myself.getName();
-                    if (Strings.empty(personName)) {
-                        configuration.warn(LOG, "No name available for GitHub login!");
-                        personName = myself.getLogin();
+            ConduitAPIClient client = configuration.getConduitAPIClient();
+            if (client != null && !configuration.isDryRun()) {
+                PhabUser user = PhabHelper.whoami(client);
+                personName = user.getUsername();
+                email = user.getEmail();
+            }
+
+            if (Strings.empty(personName)) {
+                GitHub github = configuration.getGithub();
+                if (github != null && !configuration.isDryRun()) {
+                    GHMyself myself = github.getMyself();
+                    if (myself != null) {
+                        email = myself.getEmail();
+                        personName = myself.getName();
+                        if (Strings.empty(personName)) {
+                            configuration.warn(LOG, "No name available for GitHub login!");
+                            personName = myself.getLogin();
+                        }
                     }
                 }
             }
@@ -123,12 +136,22 @@ public class GitPluginCLI implements GitPlugin {
 
     @Override
     public boolean stashAndCheckoutBranch(File dir, String branch) {
+        return stashAndCheckoutBranch(dir, branch, false);
+    }
+
+    @Override
+    public boolean stashAndCheckoutBranch(File dir, String branch, boolean createNotExist) {
         if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "stash") == 0) {
             if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", branch) == 0) {
                 return true;
+            } else if (createNotExist) {
+                LOG.warn("Failed to checkout " + branch + ". Try to create");
+                if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "checkout", "-b", branch) == 0) {
+                    return true;
+                }
             }
         }
-        LOG.warn("Failed to checkout " + branch + " in " + dir);
+        LOG.warn("Failed to checkout and create " + branch + " in " + dir);
         return false;
     }
 
@@ -137,5 +160,20 @@ public class GitPluginCLI implements GitPlugin {
         if (ProcessHelper.runCommandIgnoreOutput(dir, "git", "stash") != 0) {
             throw new IOException("Failed to stash old changes!");
         }
+    }
+
+    @Override
+    public String diff(File dir, String branch) throws IOException {
+        return ProcessHelper.runCommandCaptureOutput(dir, "git", "diff", branch);
+    }
+
+    @Override
+    public String currentBranch(File dir) throws IOException {
+        return ProcessHelper.runCommandCaptureOutput(dir, "git", "rev-parse", "--abbrev-ref", "HEAD").trim();
+    }
+
+    @Override
+    public void updateSubmodule(File dir) {
+        ProcessHelper.runCommandAndLogOutput(configuration, LOG, dir, false, "git", "submodule", "update", "--init", "--remote");
     }
 }

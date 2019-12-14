@@ -22,11 +22,13 @@ import io.jenkins.updatebot.Configuration;
 import io.jenkins.updatebot.kind.Kind;
 import io.jenkins.updatebot.kind.regex.RegexUpdater;
 import io.jenkins.updatebot.repository.LocalRepository;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +39,7 @@ import java.util.List;
 public class PushRegexChanges extends ModifyFilesCommandSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(PushRegexChanges.class);
 
-    @Parameter(order = 0, names = {"--regex", "-r"}, description = "The regular expression to replace", variableArity=true)
+    @Parameter(order = 0, names = {"--regex", "-r"}, description = "The regular expression to replace", variableArity = true)
     private List<String> regex;
 
     @Parameter(order = 1, names = {"--value", "-v"}, description = "The value to replace the regex group with")
@@ -88,5 +90,15 @@ public class PushRegexChanges extends ModifyFilesCommandSupport {
 
         RegexUpdater updater = (RegexUpdater) Kind.REGEX.getUpdater();
         return updater.pushRegex(this, context);
+    }
+
+    @Override
+    protected String resolvePhabricatorBranch(CommandContext context) {
+        List<String> items = new ArrayList<>();
+        items.addAll(files);
+        items.addAll(regex);
+        items.add(value);
+        String sha1 = DigestUtils.sha1Hex(String.join(" ", items));
+        return "autofix/" + sha1.substring(0, 8);
     }
 }
